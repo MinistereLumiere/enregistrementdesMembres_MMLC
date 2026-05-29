@@ -441,11 +441,16 @@ function renderFormMembre(container, memberId) {
 
     try {
       if (modeEdition) {
-        await setDoc(doc(db, "members", memberId), { ...data, id: memberId, dateAdhesion: m.dateAdhesion || Date.now() });
+        await setDoc(doc(db, "members", memberId), {
+          ...data,
+          dateAdhesion: m.dateAdhesion || Date.now()
+        });
         toast("Modifications enregistrées", "success");
       } else {
-        const docRef = await addDoc(collection(db, "members"), { ...data, dateAdhesion: Date.now() });
-        await setDoc(docRef, { ...data, id: docRef.id, dateAdhesion: Date.now() });
+        await addDoc(collection(db, "members"), {
+          ...data,
+          dateAdhesion: Date.now()
+        });
         toast("Membre ajouté", "success");
       }
       window.location.hash = "#/membres";
@@ -600,8 +605,7 @@ function dialogueAjoutPresence(memberId) {
       notes: $("#presence-notes").value.trim()
     };
     try {
-      const ref = await addDoc(collection(db, "attendance"), data);
-      await setDoc(ref, { ...data, id: ref.id });
+      await addDoc(collection(db, "attendance"), data);
       toast("Présence enregistrée", "success");
       backdrop.remove();
     } catch (err) {
@@ -766,11 +770,16 @@ function renderFormGroupe(container, groupId) {
 
     try {
       if (modeEdition) {
-        await setDoc(doc(db, "groups", groupId), { ...data, id: groupId, dateCreation: g.dateCreation || Date.now() });
+        await setDoc(doc(db, "groups", groupId), {
+          ...data,
+          dateCreation: g.dateCreation || Date.now()
+        });
         toast("Modifications enregistrées", "success");
       } else {
-        const ref = await addDoc(collection(db, "groups"), { ...data, dateCreation: Date.now() });
-        await setDoc(ref, { ...data, id: ref.id, dateCreation: Date.now() });
+        await addDoc(collection(db, "groups"), {
+          ...data,
+          dateCreation: Date.now()
+        });
         toast("Groupe créé", "success");
       }
       window.location.hash = "#/groupes";
@@ -895,7 +904,9 @@ function dialogueGererMembres(groupId) {
           const nouveaux = veutDans
             ? [...(m.groupIds || []), groupId]
             : (m.groupIds || []).filter(id => id !== groupId);
-          promises.push(setDoc(doc(db, "members", m.id), { ...m, groupIds: nouveaux }));
+          // On retire les champs id calculés avant d'écrire
+          const { id, ...donnees } = m;
+          promises.push(setDoc(doc(db, "members", m.id), { ...donnees, groupIds: nouveaux }));
         }
       }
       await Promise.all(promises);
@@ -1177,6 +1188,17 @@ function renderParametres(container) {
     </div>
 
     <div class="settings-section">
+      <div class="settings-section-title">Maintenance</div>
+      <div class="settings-item" id="reparer-donnees">
+        <span class="settings-icon">🔧</span>
+        <div class="settings-text">
+          <div class="settings-title">Réparer les données</div>
+          <div class="settings-subtitle">Nettoie les documents pour qu'ils soient lisibles par Android</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
       <div class="settings-section-title">Synchronisation</div>
       <div class="settings-item" style="cursor:default">
         <span class="settings-icon">☁️</span>
@@ -1197,6 +1219,36 @@ function renderParametres(container) {
   $("#exp-presences").addEventListener("click", exporterPresences);
   $("#exp-groupes").addEventListener("click", exporterGroupes);
   $("#exp-roles").addEventListener("click", exporterParRole);
+  $("#reparer-donnees").addEventListener("click", reparerDonnees);
+}
+
+async function reparerDonnees() {
+  if (!confirm("Cette opération va nettoyer tous les documents pour les rendre compatibles Android. Continuer ?")) return;
+  try {
+    toast("Réparation en cours…", "info");
+    let count = 0;
+    // Nettoyer les membres
+    for (const m of state.membres) {
+      const { id, nomComplet, moisJourNaissance, ...donnees } = m;
+      await setDoc(doc(db, "members", m.id), donnees);
+      count++;
+    }
+    // Nettoyer les groupes
+    for (const g of state.groupes) {
+      const { id, ...donnees } = g;
+      await setDoc(doc(db, "groups", g.id), donnees);
+      count++;
+    }
+    // Nettoyer les présences
+    for (const p of state.presences) {
+      const { id, ...donnees } = p;
+      await setDoc(doc(db, "attendance", p.id), donnees);
+      count++;
+    }
+    toast(`${count} document(s) réparé(s). L'app Android peut maintenant être ouverte.`, "success");
+  } catch (err) {
+    toast("Erreur : " + err.message, "error");
+  }
 }
 
 // ============================================================
