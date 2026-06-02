@@ -10,6 +10,9 @@ import {
   getFirestore, collection, doc, query, orderBy, onSnapshot,
   getDoc, getDocs, setDoc, addDoc, deleteDoc, serverTimestamp, where
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import {
+  getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js";
 
 import * as PDF from "./pdf.js";
 
@@ -17,6 +20,7 @@ import * as PDF from "./pdf.js";
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 // ============================================================
 // CONSTANTES MÉTIER (copiées du modèle Android)
@@ -94,6 +98,15 @@ function initiales(m) {
 
 function nomComplet(m) {
   return `${m.prenom || ""} ${m.nom || ""}`.trim() || "Sans nom";
+}
+
+function avatarHTML(m, taille = 44) {
+  if (m.photoUrl && m.photoUrl.startsWith("http")) {
+    return `<div class="avatar" style="width:${taille}px;height:${taille}px;overflow:hidden;padding:0">
+      <img src="${escapeHtml(m.photoUrl)}" alt="" style="width:100%;height:100%;object-fit:cover">
+    </div>`;
+  }
+  return `<div class="avatar" style="width:${taille}px;height:${taille}px;font-size:${Math.round(taille * 0.36)}px">${initiales(m)}</div>`;
 }
 
 function moisJourNaissance(m) {
@@ -275,7 +288,7 @@ function renderListeMembres(container) {
     <div class="list-card">
       ${liste.map(m => `
         <div class="list-item" data-id="${m.id}">
-          <div class="avatar">${initiales(m)}</div>
+          ${avatarHTML(m, 44)}
           <div class="list-item-content">
             <div class="list-item-title">${escapeHtml(nomComplet(m))}</div>
             <div class="list-item-role">${escapeHtml(m.role || "Fidèle")} ${regulariteHTML(m.regularite)}</div>
@@ -325,6 +338,16 @@ function renderFormMembre(container, memberId) {
     </div>
     <div class="form-card">
       <form id="form-membre">
+        <div class="form-group" style="text-align:center;">
+          <label>Photo de profil</label>
+          <div id="apercu-photo" style="width: 100px; height: 100px; border-radius: 50%; margin: 8px auto; cursor: pointer; overflow: hidden; background: var(--or-clair); color: var(--bleu-nuit); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold;">
+            ${m.photoUrl && m.photoUrl.startsWith("http") ? `<img src="${escapeHtml(m.photoUrl)}" alt="Photo" style="width:100%;height:100%;object-fit:cover;">` : initiales(m)}
+          </div>
+          <input type="file" id="input-photo" accept="image/*" style="display:none">
+          <button type="button" class="btn-outline" id="btn-choisir-photo" style="margin-top:8px">Choisir une photo</button>
+          ${m.photoUrl ? `<button type="button" class="btn-link" id="btn-retirer-photo" style="color:var(--rouge); margin-left:8px">Retirer</button>` : ""}
+        </div>
+
         <div class="form-row">
           <div class="form-group">
             <label>Prénom</label>
@@ -418,6 +441,37 @@ function renderFormMembre(container, memberId) {
     </div>
   `;
 
+  let nouvellePhotoFichier = null;
+  let photoARetirer = false;
+
+  $("#btn-choisir-photo").addEventListener("click", () => $("#input-photo").click());
+
+  $("#input-photo").addEventListener("change", (e) => {
+    const fichier = e.target.files[0];
+    if (!fichier) return;
+    if (fichier.size > 5 * 1024 * 1024) {
+      toast("Photo trop volumineuse (max 5 Mo)", "error");
+      return;
+    }
+    nouvellePhotoFichier = fichier;
+    photoARetirer = false;
+    // Prévisualisation
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      $("#apercu-photo").innerHTML = `<img src="${ev.target.result}" alt="Photo" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+    };
+    reader.readAsDataURL(fichier);
+  });
+
+  const btnRetirer = $("#btn-retirer-photo");
+  if (btnRetirer) {
+    btnRetirer.addEventListener("click", () => {
+      photoARetirer = true;
+      nouvellePhotoFichier = null;
+      $("#apercu-photo").innerHTML = initiales(m);
+    });
+  }
+
   $("#form-membre").addEventListener("submit", async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
@@ -435,30 +489,67 @@ function renderFormMembre(container, memberId) {
       regularite: fd.get("regularite"),
       groupIds: Array.from(fd.getAll("groupes")),
       notes: fd.get("notes").trim(),
-      // Photo : non gérée côté web pour rester compatible Android (stockage local)
-      photoUrl: m.photoUrl || ""
+      photoUrl: photoARetirer ? "" : (m.photoUrl || "")
     };
 
+    const submitBtn = e.target.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+    submitBtn.textContent = nouvellePhotoFichier ? "Upload en cours…" : "Enregistrement…";
+
     try {
+      // Si nouvelle photo, on l'upload AVANT d'enregistrer le document
+      let memberIdFinal = memberId;
       if (modeEdition) {
+        if (nouvellePhotoFichier) {
+          data.photoUrl = await uploadPhoto(memberId, nouvellePhotoFichier);
+        } else if (photoARetirer && m.photoUrl) {
+          await supprimerPhotoStorage(memberId);
+        }
         await setDoc(doc(db, "members", memberId), {
           ...data,
           dateAdhesion: m.dateAdhesion || Date.now()
         });
         toast("Modifications enregistrées", "success");
       } else {
-        await addDoc(collection(db, "members"), {
+        // Création : d'abord créer le doc pour avoir l'ID, puis upload photo
+        const docRef = await addDoc(collection(db, "members"), {
           ...data,
           dateAdhesion: Date.now()
         });
+        memberIdFinal = docRef.id;
+        if (nouvellePhotoFichier) {
+          const url = await uploadPhoto(docRef.id, nouvellePhotoFichier);
+          await setDoc(docRef, {
+            ...data,
+            photoUrl: url,
+            dateAdhesion: Date.now()
+          });
+        }
         toast("Membre ajouté", "success");
       }
       window.location.hash = "#/membres";
     } catch (err) {
       console.error(err);
       toast("Erreur : " + err.message, "error");
+      submitBtn.disabled = false;
+      submitBtn.textContent = modeEdition ? "Enregistrer" : "Ajouter le membre";
     }
   });
+}
+
+async function uploadPhoto(memberId, fichier) {
+  const ref = storageRef(storage, `photos_membres/${memberId}.jpg`);
+  await uploadBytes(ref, fichier);
+  return await getDownloadURL(ref);
+}
+
+async function supprimerPhotoStorage(memberId) {
+  try {
+    const ref = storageRef(storage, `photos_membres/${memberId}.jpg`);
+    await deleteObject(ref);
+  } catch (e) {
+    // Photo inexistante, on ignore
+  }
 }
 
 // ============================================================
@@ -491,7 +582,7 @@ function renderDetailMembre(container, memberId) {
 
     <div class="form-card">
       <div class="detail-header">
-        <div class="detail-avatar">${initiales(m)}</div>
+        ${avatarHTML(m, 80)}
         <div>
           <div class="detail-name">${escapeHtml(nomComplet(m))}</div>
           <div class="detail-role">${escapeHtml(m.role || "Fidèle")} ${regulariteHTML(m.regularite)}</div>
@@ -533,7 +624,10 @@ function renderDetailMembre(container, memberId) {
 
   $("#btn-supprimer").addEventListener("click", () => {
     if (confirm(`Supprimer définitivement ${nomComplet(m)} ? Cette action est irréversible.`)) {
-      deleteDoc(doc(db, "members", memberId))
+      Promise.all([
+        deleteDoc(doc(db, "members", memberId)),
+        supprimerPhotoStorage(memberId)
+      ])
         .then(() => {
           toast("Membre supprimé", "success");
           window.location.hash = "#/membres";
@@ -828,7 +922,7 @@ function renderDetailGroupe(container, groupId) {
       <div class="list-card">
         ${membresDuGroupe.map(m => `
           <div class="list-item" data-membre-id="${m.id}">
-            <div class="avatar">${initiales(m)}</div>
+            ${avatarHTML(m, 44)}
             <div class="list-item-content">
               <div class="list-item-title">${escapeHtml(nomComplet(m))}</div>
               <div class="list-item-role">${escapeHtml(m.role || "Fidèle")} ${regulariteHTML(m.regularite)}</div>
