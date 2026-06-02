@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registre des Membres MMLC</title>
+  <link rel="icon" type="image/png" href="assets/logo_mmlc.png">
+  <link rel="stylesheet" href="styles.css">
+  <!-- jsPDF pour la génération de PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- Écran de connexion -->
+  <div id="login-screen" class="hidden">
+    <div class="login-card">
+      <img src="assets/logo_mmlc.png" alt="Logo MMLC" class="login-logo">
+      <h1>Ministère Maison de Lumière du Canada</h1>
+      <p class="subtitle">Espace administrateur</p>
+      <form id="login-form">
+        <input type="email" id="login-email" placeholder="Adresse email" required autocomplete="username">
+        <input type="password" id="login-password" placeholder="Mot de passe" required autocomplete="current-password">
+        <div id="login-error" class="error-message hidden"></div>
+        <button type="submit" id="login-button">Se connecter</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Application principale -->
+  <div id="app" class="hidden">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="assets/logo_mmlc.png" alt="Logo">
+        <div>
+          <div class="sidebar-title">MMLC</div>
+          <div class="sidebar-subtitle">Registre des membres</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#/membres" data-route="membres" class="nav-item">
+          <span class="nav-icon">👥</span>
+          <span>Membres</span>
+        </a>
+        <a href="#/groupes" data-route="groupes" class="nav-item">
+          <span class="nav-icon">🏷️</span>
+          <span>Groupes</span>
+        </a>
+        <a href="#/stats" data-route="stats" class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span>Statistiques</span>
+        </a>
+        <a href="#/parametres" data-route="parametres" class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          <span>Paramètres</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-email" id="user-email"></div>
+          <button id="logout-button" class="btn-link">Se déconnecter</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div id="page-content"></div>
+    </main>
+  </div>
+
+  <!-- Conteneur pour les notifications -->
+  <div id="toast-container"></div>
+
+  <!-- Chargement modal -->
+  <div id="loader" class="hidden">
+    <div class="loader-content">
+      <div class="spinner"></div>
+      <p>Connexion à Firebase...</p>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
