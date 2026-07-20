@@ -1,0 +1,3104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Ministère Maison de Lumière du Canada</title>
+<meta name="description" content="Plateforme de gestion du Ministère Maison de Lumière du Canada" />
+
+<!-- ====== PWA (Progressive Web App) ====== -->
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#00205B" />
+<meta name="mobile-web-app-capable" content="yes" />
+<link rel="icon" type="image/png" href="favicon.png" />
+
+<!-- iOS / Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Maison de Lumière" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+
+<!-- Polices -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Chart.js pour les graphiques -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<!-- jsPDF pour les rapports PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  :root {
+    --navy: #00205B;
+    --navy-light: #1a3a7a;
+    --navy-dark: #00163d;
+    --gold: #F5A800;
+    --gold-light: #ffd166;
+    --gold-dark: #d18e00;
+    --text-dark: #0a1c3e;
+    --text-muted: #5a6a8a;
+    --bg-light: #f4f6fb;
+  }
+
+  * { -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Lato', sans-serif;
+    background: var(--bg-light);
+    color: var(--text-dark);
+  }
+
+  .font-title { font-family: 'Cinzel', serif; }
+
+  .bg-navy { background-color: var(--navy); }
+  .bg-navy-light { background-color: var(--navy-light); }
+  .bg-gold { background-color: var(--gold); }
+  .bg-gold-light { background-color: var(--gold-light); }
+  .text-navy { color: var(--navy); }
+  .text-gold { color: var(--gold); }
+  .border-gold { border-color: var(--gold); }
+  .border-navy { border-color: var(--navy); }
+
+  .gradient-hero {
+    background: linear-gradient(160deg, #00205B 0%, #0a2d6e 60%, #142d5e 100%);
+  }
+  .gradient-card {
+    background: linear-gradient(135deg, var(--navy), var(--navy-light));
+  }
+  .gradient-gold {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  }
+
+  .nav-item {
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { background: rgba(245, 168, 0, 0.08); color: var(--gold); }
+  .nav-item.active {
+    background: rgba(245, 168, 0, 0.12);
+    color: var(--gold);
+    border-left-color: var(--gold);
+  }
+
+  .btn-primary {
+    background: var(--navy);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-primary:hover:not(:disabled) { background: var(--navy-light); transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .btn-gold {
+    background: var(--gold);
+    color: var(--navy);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-gold:hover:not(:disabled) { background: var(--gold-dark); transform: translateY(-1px); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--navy);
+    padding: 9px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    border: 1.5px solid var(--navy);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+  }
+  .btn-outline:hover { background: var(--navy); color: white; }
+
+  .btn-danger {
+    background: #dc2626;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 7px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .btn-danger:hover { background: #b91c1c; }
+
+  .form-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    background: white;
+    transition: border 0.2s;
+  }
+  .form-input:focus {
+    outline: none;
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(0, 32, 91, 0.1);
+  }
+
+  .form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 6px;
+  }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #e5e7eb;
+  }
+
+  .stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--gold);
+  }
+
+  .page-section { display: none; }
+  .page-section.active { display: block; }
+
+  .toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    padding: 14px 20px;
+    border-radius: 10px;
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    transform: translateX(420px);
+    transition: transform 0.3s;
+    max-width: 340px;
+  }
+  .toast.show { transform: translateX(0); }
+  .toast.success { background: #059669; }
+  .toast.error { background: #dc2626; }
+  .toast.info { background: var(--navy); }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-backdrop.show { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 14px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 28px;
+  }
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid #e5e7eb;
+    border-top-color: var(--navy);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .sidebar { transition: transform 0.3s; }
+  @media (max-width: 1023px) {
+    .sidebar { position: fixed; top: 0; left: 0; bottom: 0; transform: translateX(-100%); z-index: 50; }
+    .sidebar.open { transform: translateX(0); }
+  }
+
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  table.data-table th {
+    background: #f9fafb;
+    text-align: left;
+    padding: 12px;
+    font-weight: 700;
+    color: var(--text-dark);
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  table.data-table td {
+    padding: 12px;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+  }
+  table.data-table th.text-right,
+  table.data-table td.text-right {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  table.data-table th.text-center,
+  table.data-table td.text-center {
+    text-align: center;
+  }
+  table.data-table tr:hover { background: #f9fafb; }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge-admin { background: #fef3c7; color: #92400e; }
+  .badge-user { background: #dbeafe; color: #1e40af; }
+  .badge-pasteur { background: #ede9fe; color: #5b21b6; }
+  .badge-tresorier { background: #d1fae5; color: #065f46; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #f1f5f9; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+</style>
+</head>
+<body>
+
+<!-- ====== ÉCRAN DE CHARGEMENT ====== -->
+<div id="loading-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-white">
+  <div class="text-center">
+    <div class="spinner mx-auto mb-4"></div>
+    <p class="text-sm text-gray-600">Chargement de l'application...</p>
+  </div>
+</div>
+
+<!-- ====== ÉCRAN DE CONFIGURATION (si Firebase non configuré) ====== -->
+<div id="config-screen" class="hidden fixed inset-0 z-40 bg-white overflow-y-auto">
+  <div class="max-w-2xl mx-auto p-8 py-12">
+    <div class="text-center mb-8">
+      <div class="inline-flex w-16 h-16 bg-navy rounded-full items-center justify-center mb-4">
+        <span class="text-3xl text-gold">⚙</span>
+      </div>
+      <h1 class="font-title text-2xl text-navy font-bold mb-2">Configuration requise</h1>
+      <p class="text-gray-600 text-sm">Configurez Firebase pour démarrer votre application</p>
+    </div>
+
+    <div class="card">
+      <h2 class="font-bold text-navy mb-3">Étape 1 — Créer un projet Firebase</h2>
+      <ol class="text-sm text-gray-700 space-y-2 mb-6 list-decimal pl-5">
+        <li>Allez sur <a href="https://console.firebase.google.com" target="_blank" class="text-navy underline font-bold">console.firebase.google.com</a></li>
+        <li>Créez un nouveau projet (ex : "ministere-maison-lumiere")</li>
+        <li>Activez <b>Authentication</b> → méthode "Email/Mot de passe"</li>
+        <li>Activez <b>Firestore Database</b> en mode production</li>
+        <li>Dans Paramètres → Vos applications → Web, copiez la config</li>
+      </ol>
+
+      <h2 class="font-bold text-navy mb-3">Étape 2 — Coller la configuration</h2>
+      <p class="text-sm text-gray-600 mb-3">Ouvrez ce fichier <code class="bg-gray-100 px-2 py-1 rounded text-xs">index.html</code> dans un éditeur et remplacez le bloc <code class="bg-gray-100 px-2 py-1 rounded text-xs">FIREBASE_CONFIG</code> par votre configuration.</p>
+
+      <pre class="bg-gray-900 text-green-300 text-xs p-4 rounded-lg overflow-x-auto"><code>const FIREBASE_CONFIG = {
+  apiKey: "VOTRE_API_KEY",
+  authDomain: "votre-projet.firebaseapp.com",
+  projectId: "votre-projet",
+  storageBucket: "votre-projet.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123:web:abc123"
+};</code></pre>
+
+      <h2 class="font-bold text-navy mb-3 mt-6">Étape 3 — Premier compte admin</h2>
+      <p class="text-sm text-gray-700 mb-3">Une fois Firebase configuré :</p>
+      <ol class="text-sm text-gray-700 space-y-2 list-decimal pl-5">
+        <li>Dans la console Firebase → <b>Authentication</b> → Créez un utilisateur</li>
+        <li>Dans <b>Firestore</b>, créez une collection <code class="bg-gray-100 px-2 py-1 rounded text-xs">users</code></li>
+        <li>Ajoutez un document avec l'<b>UID</b> de l'utilisateur, contenant :
+          <pre class="bg-gray-100 p-3 rounded mt-2 text-xs">{
+  "email": "admin@example.com",
+  "nom": "Admin",
+  "role": "admin",
+  "createdAt": [timestamp]
+}</pre>
+        </li>
+        <li>Rechargez cette page et connectez-vous</li>
+      </ol>
+
+      <h2 class="font-bold text-navy mb-3 mt-6">Étape 4 — Règles Firestore</h2>
+      <p class="text-sm text-gray-600 mb-3">Dans Firestore → Règles, collez ceci :</p>
+      <pre class="bg-gray-900 text-green-300 text-xs p-4 rounded-lg overflow-x-auto"><code>rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuth() { return request.auth != null; }
+    function isAdmin() {
+      return isAuth() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    match /users/{userId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
+    match /{document=**} {
+      allow read, write: if isAuth();
+    }
+  }
+}</code></pre>
+
+      <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <p class="text-sm text-blue-900"><b>Hébergement Firebase :</b> Une fois prêt, déployez avec <code class="bg-blue-100 px-2 py-0.5 rounded text-xs">firebase deploy --only hosting</code> après avoir initialisé Firebase Hosting dans votre dossier.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== PAGE DE CONNEXION ====== -->
+<div id="login-page" class="hidden min-h-screen gradient-hero flex items-center justify-center p-4">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-8">
+      <div class="inline-flex w-20 h-20 bg-white/10 border-2 border-gold rounded-full items-center justify-center mb-4">
+        <svg class="w-10 h-10 text-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z"/></svg>
+      </div>
+      <h1 class="font-title text-3xl text-white font-bold mb-2">Maison de Lumière</h1>
+      <p class="text-gold/80 text-sm italic">Du Canada</p>
+    </div>
+
+    <div class="bg-white rounded-2xl p-8 shadow-2xl">
+      <h2 class="font-title text-xl text-navy font-bold text-center mb-2">Connexion</h2>
+      <p class="text-center text-gray-500 text-sm mb-6">Accédez à votre espace de gestion</p>
+
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label class="form-label">Adresse email</label>
+          <input type="email" id="login-email" class="form-input" placeholder="votre@email.com" required />
+        </div>
+        <div>
+          <label class="form-label">Mot de passe</label>
+          <input type="password" id="login-password" class="form-input" placeholder="••••••••" required />
+        </div>
+        <button type="submit" class="btn-primary w-full justify-center" id="login-btn">
+          Se connecter
+        </button>
+      </form>
+
+      <p class="text-xs text-gray-500 text-center mt-6 italic">
+        "Que votre lumière luise ainsi devant les hommes"<br>
+        <span class="text-gray-400">— Matthieu 5:16</span>
+      </p>
+    </div>
+
+    <p class="text-center text-white/60 text-xs mt-6">© 2026 Ministère Maison de Lumière du Canada</p>
+  </div>
+</div>
+
+<!-- ====== APPLICATION PRINCIPALE ====== -->
+<div id="app" class="hidden min-h-screen flex">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar w-64 bg-navy text-white flex-shrink-0 flex flex-col">
+    <div class="p-5 border-b border-white/10">
+      <div class="flex items-center gap-3">
+        <div class="w-14 h-14 bg-white rounded-xl flex items-center justify-center flex-shrink-0 p-1 shadow-md">
+          <img src="data:image/jpeg;base64,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" alt="Logo Ministère Maison de Lumière du Canada" class="w-full h-full object-contain" />
+        </div>
+        <div class="min-w-0">
+          <h2 class="font-title text-sm font-bold leading-tight text-white">Maison de Lumière</h2>
+          <p class="text-xs text-gold/80 italic">du Canada</p>
+        </div>
+      </div>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto py-4">
+      <a href="#dashboard" class="nav-item flex items-center gap-3 px-6 py-3 text-base font-bold" data-page="dashboard">
+        <span>🏠</span> Tableau de bord
+      </a>
+      <a href="#offrandes" class="nav-item flex items-center gap-3 px-6 py-3 text-base font-bold" data-page="offrandes">
+        <span>💰</span> Offrandes
+      </a>
+      <a href="#retraits" class="nav-item flex items-center gap-3 px-6 py-3 text-base font-bold" data-page="retraits">
+        <span>💸</span> Retraits
+      </a>
+      <a href="#rapports" class="nav-item flex items-center gap-3 px-6 py-3 text-base font-bold" data-page="rapports">
+        <span>📑</span> Rapports
+      </a>
+      <a href="#stats" class="nav-item flex items-center gap-3 px-6 py-3 text-base font-bold" data-page="stats">
+        <span>📊</span> Statistiques
+      </a>
+      <a href="#dons" class="nav-item flex items-center gap-3 px-6 py-3 text-base font-bold" data-page="dons">
+        <span>🎁</span> Dons en ligne
+      </a>
+      <a href="#users" class="nav-item flex items-center gap-3 px-6 py-3 text-base font-bold hidden" data-page="users" id="nav-users">
+        <span>👤</span> Utilisateurs
+      </a>
+    </nav>
+
+    <div class="p-4 border-t border-white/10">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-9 h-9 rounded-full bg-gold/20 flex items-center justify-center text-gold font-bold text-sm" id="user-avatar">?</div>
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-bold truncate" id="user-name">—</p>
+          <p class="text-xs text-white/60 truncate" id="user-role">—</p>
+        </div>
+      </div>
+      <button id="install-app-btn" class="hidden w-full text-sm bg-gold text-navy hover:bg-gold-light py-2 rounded-lg transition flex items-center justify-center gap-2 font-bold mb-2">
+        <span>📱</span> Installer l'application
+      </button>
+      <button id="logout-btn" class="w-full text-sm bg-white/10 hover:bg-white/20 py-2 rounded-lg transition flex items-center justify-center gap-2">
+        <span>🚪</span> Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- Contenu principal -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-30">
+      <div class="flex items-center gap-3">
+        <button id="menu-toggle" class="lg:hidden text-2xl">☰</button>
+        <h1 id="page-title" class="font-title text-xl text-navy font-bold">Tableau de bord</h1>
+      </div>
+      <div class="text-sm text-gray-500" id="today-date">—</div>
+    </header>
+
+    <!-- Sections -->
+    <main class="flex-1 overflow-y-auto p-6">
+
+      <!-- ====== DASHBOARD ====== -->
+      <section id="page-dashboard" class="page-section active">
+
+        <!-- Carte mise en avant : Solde actuel toutes périodes confondues -->
+        <div class="mb-4 rounded-2xl p-5 shadow-lg" style="background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%); border: 2px solid #064e3b;">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <p class="text-xs uppercase text-white/80 font-bold tracking-widest mb-1">💰 Solde actuel — toutes périodes</p>
+              <p class="text-4xl font-bold text-white" id="stat-solde-global">0 CAD</p>
+              <p class="text-xs text-white/70 mt-1">Total cumulé depuis le début (offrandes + dons en ligne − retraits)</p>
+            </div>
+            <div class="text-right hidden md:block">
+              <p class="text-xs text-white/70">Offrandes totales</p>
+              <p class="text-lg font-bold text-white" id="stat-offrandes-global">0 CAD</p>
+              <p class="text-xs text-white/70 mt-2">Retraits totaux</p>
+              <p class="text-lg font-bold text-white" id="stat-retraits-global">0 CAD</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="stat-card">
+            <p class="text-xs uppercase text-gray-500 font-bold tracking-wider">Total offrandes</p>
+            <p class="text-2xl font-bold text-navy mt-1" id="stat-total-offrandes">0 CAD</p>
+            <p class="text-xs text-gray-500 mt-1">Cette année</p>
+          </div>
+          <div class="stat-card">
+            <p class="text-xs uppercase text-gray-500 font-bold tracking-wider">Total retraits</p>
+            <p class="text-2xl font-bold text-red-600 mt-1" id="stat-total-retraits">0 CAD</p>
+            <p class="text-xs text-gray-500 mt-1">Cette année</p>
+          </div>
+          <div class="stat-card">
+            <p class="text-xs uppercase text-gray-500 font-bold tracking-wider">Solde actuel</p>
+            <p class="text-2xl font-bold text-green-600 mt-1" id="stat-solde">0 CAD</p>
+            <p class="text-xs text-gray-500 mt-1">Cette année</p>
+          </div>
+          <div class="stat-card">
+            <p class="text-xs uppercase text-gray-500 font-bold tracking-wider">Cultes ce mois</p>
+            <p class="text-2xl font-bold text-navy mt-1" id="stat-cultes">0</p>
+            <p class="text-xs text-gray-500 mt-1" id="stat-cultes-month">—</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div class="card">
+            <h3 class="font-bold text-navy mb-4">Évolution mensuelle des offrandes</h3>
+            <div style="height:280px"><canvas id="chart-monthly"></canvas></div>
+          </div>
+          <div class="card">
+            <h3 class="font-bold text-navy mb-4">Répartition des offrandes</h3>
+            <div style="height:280px"><canvas id="chart-repartition"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="font-bold text-navy mb-4">Dernières opérations</h3>
+          <div class="overflow-x-auto">
+            <table class="data-table">
+              <thead><tr><th>Date</th><th>Type</th><th>Description</th><th class="text-right">Montant</th></tr></thead>
+              <tbody id="recent-operations"><tr><td colspan="4" class="text-center text-gray-400 py-6">Aucune opération</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== OFFRANDES ====== -->
+      <section id="page-offrandes" class="page-section">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="card lg:col-span-1">
+            <h3 class="font-bold text-navy mb-4">Saisir une offrande</h3>
+            <form id="offrande-form" class="space-y-4">
+              <div>
+                <label class="form-label">Date</label>
+                <input type="date" id="offrande-date" class="form-input" required />
+              </div>
+              <div>
+                <label class="form-label">Type de culte</label>
+                <select id="offrande-culte" class="form-input" required>
+                  <option value="">Sélectionner...</option>
+                  <option value="ecole-dominicale">École Dominicale</option>
+                  <option value="culte-adoration">Culte d'Adoration</option>
+                  <option value="etude-biblique">Étude Biblique</option>
+                  <option value="veille-nuit">Veillée de Nuit</option>
+                  <option value="occasionnel">Service Occasionnel</option>
+                </select>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div id="field-assemblee">
+                  <label class="form-label">Assemblée (CAD)</label>
+                  <input type="number" id="off-assemblee" class="form-input" step="0.01" min="0" placeholder="0.00" />
+                </div>
+                <div id="field-ecole">
+                  <label class="form-label">École Dom. (CAD)</label>
+                  <input type="number" id="off-ecole" class="form-input" step="0.01" min="0" placeholder="0.00" />
+                </div>
+                <div id="field-dime">
+                  <label class="form-label">Dîme (CAD)</label>
+                  <input type="number" id="off-dime" class="form-input" step="0.01" min="0" placeholder="0.00" />
+                </div>
+                <div id="field-local">
+                  <label class="form-label">Local (CAD)</label>
+                  <input type="number" id="off-local" class="form-input" step="0.01" min="0" placeholder="0.00" />
+                </div>
+              </div>
+              <button type="submit" class="btn-primary w-full justify-center">💾 Enregistrer</button>
+            </form>
+          </div>
+
+          <div class="card lg:col-span-2">
+            <div class="flex items-center justify-between flex-wrap gap-2 mb-4">
+              <h3 class="font-bold text-navy">Historique des offrandes</h3>
+              <div class="flex items-center gap-2 flex-wrap">
+                <input type="text" id="search-offrandes" class="form-input" style="width:200px" placeholder="Rechercher..." />
+                <button id="offrandes-pdf-btn" class="btn-gold" type="button">📄 PDF</button>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Culte</th>
+                    <th class="text-right">Assemblée</th>
+                    <th class="text-right">École Dom.</th>
+                    <th class="text-right">Dîme</th>
+                    <th class="text-right">Local</th>
+                    <th class="text-right">Total</th>
+                    <th class="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="offrandes-list"><tr><td colspan="8" class="text-center text-gray-400 py-6">Aucune offrande</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== RETRAITS ====== -->
+      <section id="page-retraits" class="page-section">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="card">
+            <h3 class="font-bold text-navy mb-4">Enregistrer un retrait</h3>
+            <form id="retrait-form" class="space-y-4">
+              <div>
+                <label class="form-label">Date</label>
+                <input type="date" id="retrait-date" class="form-input" required />
+              </div>
+              <div>
+                <label class="form-label">Nom / Description</label>
+                <input type="text" id="retrait-nom" class="form-input" placeholder="Ex : Loyer salle" required />
+              </div>
+              <div>
+                <label class="form-label">Montant (CAD)</label>
+                <input type="number" id="retrait-montant" class="form-input" step="0.01" min="0" required />
+              </div>
+              <div>
+                <label class="form-label">Notes (optionnel)</label>
+                <textarea id="retrait-notes" class="form-input" rows="2"></textarea>
+              </div>
+              <button type="submit" class="btn-primary w-full justify-center">💾 Enregistrer</button>
+            </form>
+          </div>
+
+          <div class="card lg:col-span-2">
+            <div class="flex items-center justify-between flex-wrap gap-2 mb-4">
+              <h3 class="font-bold text-navy">Historique des retraits</h3>
+              <div class="text-right">
+                <p class="text-xs text-gray-500">Solde actuel</p>
+                <p class="text-xl font-bold text-green-600" id="retrait-solde">0 CAD</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap mb-4">
+              <input type="text" id="search-retraits" class="form-input" style="width:240px" placeholder="Rechercher par date ou nom..." />
+              <button id="retraits-pdf-btn" class="btn-gold" type="button">📄 PDF</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th class="text-right">Montant</th>
+                    <th class="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="retraits-list"><tr><td colspan="4" class="text-center text-gray-400 py-6">Aucun retrait</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== RAPPORTS ====== -->
+      <section id="page-rapports" class="page-section">
+        <div class="card mb-6">
+          <h3 class="font-bold text-navy mb-4">Rapport mensuel</h3>
+          <div class="flex flex-wrap gap-3 items-end mb-4">
+            <div>
+              <label class="form-label">Mois</label>
+              <select id="rapport-mois" class="form-input" style="min-width:140px"></select>
+            </div>
+            <div>
+              <label class="form-label">Année</label>
+              <select id="rapport-annee" class="form-input" style="min-width:100px"></select>
+            </div>
+            <button id="rapport-gen-btn" class="btn-primary">🔄 Générer</button>
+            <button id="rapport-pdf-btn" class="btn-gold">📄 Télécharger PDF</button>
+          </div>
+          <div id="rapport-result" class="hidden mt-4"></div>
+        </div>
+
+        <div class="card">
+          <h3 class="font-bold text-navy mb-4">Rapport annuel</h3>
+          <div class="flex flex-wrap gap-3 items-end mb-4">
+            <div>
+              <label class="form-label">Année</label>
+              <select id="rapport-annual-year" class="form-input" style="min-width:100px"></select>
+            </div>
+            <button id="rapport-annual-btn" class="btn-primary">🔄 Générer</button>
+            <button id="rapport-annual-pdf-btn" class="btn-gold">📄 Télécharger PDF</button>
+          </div>
+          <div id="rapport-annual-result" class="hidden mt-4"></div>
+        </div>
+
+        <div class="card mt-6" style="border:2px solid #059669;">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-2xl">🌍</span>
+            <h3 class="font-bold text-navy">Rapport global — toutes les années</h3>
+          </div>
+          <p class="text-sm text-gray-600 mb-4">Bilan complet depuis le début, regroupé par année (offrandes, dons en ligne, retraits, solde).</p>
+          <div class="flex flex-wrap gap-3 items-end mb-4">
+            <button id="rapport-global-btn" class="btn-primary">🔄 Générer le bilan global</button>
+            <button id="rapport-global-pdf-btn" class="btn-gold">📄 Télécharger PDF</button>
+          </div>
+          <div id="rapport-global-result" class="hidden mt-4"></div>
+        </div>
+      </section>
+
+      <!-- ====== STATISTIQUES ====== -->
+      <section id="page-stats" class="page-section">
+        <div class="card mb-6">
+          <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
+            <div>
+              <h3 class="font-bold text-navy">Statistiques et tendances</h3>
+              <p class="text-sm text-gray-500">Visualisez l'évolution financière du ministère</p>
+            </div>
+            <div class="flex gap-3">
+              <div>
+                <label class="form-label">Année de référence</label>
+                <select id="stats-year" class="form-input" style="min-width:100px"></select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div class="card">
+            <h4 class="font-bold text-navy mb-1">Répartition des types d'offrandes</h4>
+            <p class="text-xs text-gray-500 mb-4">Comparaison entre Assemblée, École Dominicale, Dîme et Local</p>
+            <div style="height:300px"><canvas id="stats-chart-types"></canvas></div>
+          </div>
+          <div class="card">
+            <h4 class="font-bold text-navy mb-1">Évolution mensuelle</h4>
+            <p class="text-xs text-gray-500 mb-4">Offrandes vs Retraits par mois</p>
+            <div style="height:300px"><canvas id="stats-chart-monthly"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div class="card">
+            <h4 class="font-bold text-navy mb-1">Offrandes par type de culte</h4>
+            <p class="text-xs text-gray-500 mb-4">Quel culte génère le plus d'offrandes</p>
+            <div style="height:300px"><canvas id="stats-chart-cultes"></canvas></div>
+          </div>
+          <div class="card">
+            <h4 class="font-bold text-navy mb-1">Comparaison annuelle</h4>
+            <p class="text-xs text-gray-500 mb-4">Évolution des totaux sur les dernières années</p>
+            <div style="height:300px"><canvas id="stats-chart-years"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4 class="font-bold text-navy mb-3">Évolution détaillée par type d'offrande</h4>
+          <p class="text-xs text-gray-500 mb-4">Comparaison mois par mois pour chaque catégorie</p>
+          <div style="height:340px"><canvas id="stats-chart-detail"></canvas></div>
+        </div>
+      </section>
+
+      <!-- ====== DONS EN LIGNE ====== -->
+      <section id="page-dons" class="page-section">
+        <!-- Statistiques résumées en haut -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          <div class="stat-card">
+            <p class="text-xs uppercase text-gray-500 font-bold tracking-wider">Total dons</p>
+            <p class="text-xl font-bold text-navy mt-1" id="don-total">0 CAD</p>
+            <p class="text-xs text-gray-500 mt-1" id="don-count">0 don(s)</p>
+          </div>
+          <div class="stat-card">
+            <p class="text-xs uppercase text-gray-500 font-bold tracking-wider">Via Stripe</p>
+            <p class="text-xl font-bold text-purple-700 mt-1" id="don-stripe-total">0 CAD</p>
+            <p class="text-xs text-gray-500 mt-1" id="don-stripe-count">0 don(s)</p>
+          </div>
+          <div class="stat-card">
+            <p class="text-xs uppercase text-gray-500 font-bold tracking-wider">Via PayPal</p>
+            <p class="text-xl font-bold text-blue-700 mt-1" id="don-paypal-total">0 CAD</p>
+            <p class="text-xs text-gray-500 mt-1" id="don-paypal-count">0 don(s)</p>
+          </div>
+          <div class="stat-card">
+            <p class="text-xs uppercase text-gray-500 font-bold tracking-wider">Via Interac</p>
+            <p class="text-xl font-bold text-green-700 mt-1" id="don-interac-total">0 CAD</p>
+            <p class="text-xs text-gray-500 mt-1" id="don-interac-count">0 don(s)</p>
+          </div>
+        </div>
+
+        <!-- Onglets internes -->
+        <div class="bg-white rounded-xl border border-gray-200 mb-6 overflow-hidden">
+          <div class="flex border-b border-gray-200 overflow-x-auto">
+            <button class="dons-tab-btn px-5 py-3 text-sm font-bold border-b-2 border-navy text-navy whitespace-nowrap" data-dons-tab="historique">📋 Historique des dons</button>
+            <button class="dons-tab-btn px-5 py-3 text-sm font-bold border-b-2 border-transparent text-gray-500 whitespace-nowrap" data-dons-tab="manuel">+ Saisie manuelle</button>
+            <button class="dons-tab-btn px-5 py-3 text-sm font-bold border-b-2 border-transparent text-gray-500 whitespace-nowrap" data-dons-tab="config">⚙️ Configuration</button>
+          </div>
+
+          <!-- Onglet HISTORIQUE -->
+          <div id="dons-tab-historique" class="p-6">
+            <div class="flex items-center gap-2 flex-wrap mb-4">
+              <select id="dons-filter-method" class="form-input" style="width:180px">
+                <option value="">Toutes les méthodes</option>
+                <option value="stripe">Stripe</option>
+                <option value="paypal">PayPal</option>
+                <option value="interac">Interac</option>
+                <option value="autre">Autre</option>
+              </select>
+              <input type="text" id="dons-search" class="form-input" style="width:240px" placeholder="Rechercher par nom, email..." />
+              <button id="dons-pdf-btn" class="btn-gold" type="button">📄 PDF</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Donateur</th>
+                    <th>Email</th>
+                    <th>Méthode</th>
+                    <th class="text-right">Montant</th>
+                    <th>Statut</th>
+                    <th class="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="dons-list">
+                  <tr><td colspan="7" class="text-center text-gray-400 py-6">Aucun don enregistré</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Onglet SAISIE MANUELLE -->
+          <div id="dons-tab-manuel" class="p-6 hidden">
+            <div class="max-w-2xl">
+              <h3 class="font-bold text-navy mb-2">Enregistrer un don reçu</h3>
+              <p class="text-sm text-gray-600 mb-4">Utilisez ce formulaire pour saisir les dons reçus par PayPal, Interac ou autre méthode. Les dons Stripe sont enregistrés automatiquement.</p>
+              <form id="don-manuel-form" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="form-label">Date du don</label>
+                    <input type="date" id="don-date" class="form-input" required />
+                  </div>
+                  <div>
+                    <label class="form-label">Méthode</label>
+                    <select id="don-methode" class="form-input" required>
+                      <option value="paypal">PayPal</option>
+                      <option value="interac">Interac e-Transfer</option>
+                      <option value="especes">Espèces</option>
+                      <option value="cheque">Chèque</option>
+                      <option value="virement">Virement bancaire</option>
+                      <option value="autre">Autre</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="form-label">Nom du donateur</label>
+                    <input type="text" id="don-nom" class="form-input" placeholder="Jean Dupont" required />
+                  </div>
+                  <div>
+                    <label class="form-label">Email (optionnel)</label>
+                    <input type="email" id="don-email" class="form-input" placeholder="donateur@email.com" />
+                  </div>
+                </div>
+                <div>
+                  <label class="form-label">Montant (CAD)</label>
+                  <input type="number" id="don-montant" class="form-input" step="0.01" min="0.01" required />
+                </div>
+                <div>
+                  <label class="form-label">Référence / Note (optionnel)</label>
+                  <input type="text" id="don-reference" class="form-input" placeholder="N° transaction, motif..." />
+                </div>
+                <button type="submit" class="btn-primary w-full justify-center">💾 Enregistrer le don</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Onglet CONFIGURATION -->
+          <div id="dons-tab-config" class="p-6 hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <h3 class="font-bold text-navy mb-2">Configuration des méthodes</h3>
+                <p class="text-sm text-gray-600 mb-4">Liens utilisés sur la page publique de dons.</p>
+                <form id="dons-config-form" class="space-y-4">
+                  <div>
+                    <label class="form-label">Lien Stripe (Payment Link)</label>
+                    <input type="url" id="dons-stripe" class="form-input" placeholder="https://buy.stripe.com/..." />
+                    <p class="text-xs text-gray-500 mt-1">Créez un lien sur dashboard.stripe.com</p>
+                  </div>
+                  <div>
+                    <label class="form-label">Lien PayPal</label>
+                    <input type="url" id="dons-paypal" class="form-input" placeholder="https://paypal.me/..." />
+                  </div>
+                  <div>
+                    <label class="form-label">Email Interac (e-Transfer)</label>
+                    <input type="email" id="dons-interac" class="form-input" placeholder="dons@ministere.ca" />
+                  </div>
+                  <div>
+                    <label class="form-label">Message d'accompagnement</label>
+                    <textarea id="dons-message" class="form-input" rows="3" placeholder="Merci pour votre générosité..."></textarea>
+                  </div>
+                  <button type="submit" class="btn-primary w-full justify-center">💾 Sauvegarder</button>
+                </form>
+              </div>
+
+              <div>
+                <h3 class="font-bold text-navy mb-2">Aperçu page publique</h3>
+                <p class="text-sm text-gray-600 mb-4">Ce que verront les donateurs.</p>
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 text-center">
+                  <div class="text-4xl mb-3">🎁</div>
+                  <h4 class="font-title text-xl font-bold text-navy mb-2">Soutenir notre ministère</h4>
+                  <p class="text-sm text-gray-600 mb-6" id="dons-preview-msg">Votre générosité fait la différence.</p>
+                  <div class="space-y-3">
+                    <a id="preview-stripe" href="#" target="_blank" class="block btn-primary justify-center w-full">💳 Don par carte (Stripe)</a>
+                    <a id="preview-paypal" href="#" target="_blank" class="block btn-gold justify-center w-full">🅿️ Don par PayPal</a>
+                    <div id="preview-interac" class="text-sm bg-white p-3 rounded-lg border border-gray-200">
+                      <p class="text-gray-500 text-xs">Interac e-Transfer</p>
+                      <p class="font-bold text-navy" id="preview-interac-email">—</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg text-xs text-purple-900">
+                  <strong>💡 Astuce :</strong> Pour que les paiements Stripe apparaissent automatiquement ici, déployez la Cloud Function fournie dans le dossier <code class="bg-white px-1 rounded">functions/</code>.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== UTILISATEURS (admin only) ====== -->
+      <section id="page-users" class="page-section">
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-navy">Gestion des utilisateurs</h3>
+            <button id="user-add-btn" class="btn-gold">+ Créer un utilisateur</button>
+          </div>
+          <p class="text-xs text-gray-500 mb-4">Seuls les administrateurs peuvent créer ou modifier des comptes.</p>
+          <div class="overflow-x-auto">
+            <table class="data-table">
+              <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Créé le</th><th></th></tr></thead>
+              <tbody id="users-list"><tr><td colspan="5" class="text-center text-gray-400 py-6">Chargement...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="bg-navy text-white text-center py-4 text-xs">
+      <p>© 2026 Ministère Maison de Lumière du Canada</p>
+      <p class="text-white/50 italic mt-1">"Que votre lumière luise ainsi devant les hommes" — Matthieu 5:16</p>
+    </footer>
+  </div>
+</div>
+
+<!-- ====== MODAL CRÉATION UTILISATEUR ====== -->
+<div id="user-modal" class="modal-backdrop">
+  <div class="modal">
+    <h3 class="font-title text-xl font-bold text-navy mb-4">Créer un utilisateur</h3>
+    <form id="user-form" class="space-y-4">
+      <div>
+        <label class="form-label">Nom complet</label>
+        <input type="text" id="new-user-nom" class="form-input" required />
+      </div>
+      <div>
+        <label class="form-label">Email</label>
+        <input type="email" id="new-user-email" class="form-input" required />
+      </div>
+      <div>
+        <label class="form-label">Mot de passe temporaire</label>
+        <input type="text" id="new-user-pwd" class="form-input" minlength="6" required />
+        <p class="text-xs text-gray-500 mt-1">L'utilisateur pourra le changer après sa première connexion.</p>
+      </div>
+      <div>
+        <label class="form-label">Rôle</label>
+        <select id="new-user-role" class="form-input">
+          <option value="user">Membre</option>
+          <option value="tresorier">Trésorier</option>
+          <option value="pasteur">Pasteur</option>
+          <option value="admin">Administrateur</option>
+        </select>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="button" id="user-cancel-btn" class="btn-outline flex-1 justify-center">Annuler</button>
+        <button type="submit" class="btn-primary flex-1 justify-center">Créer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ====== TOAST ====== -->
+<div id="toast" class="toast"></div>
+
+<!-- ============================================ -->
+<!-- ====== SCRIPT PRINCIPAL — Firebase + Logique ====== -->
+<!-- ============================================ -->
+<script type="module">
+
+// ========================================
+// PWA — Service Worker + Bouton d'installation
+// ========================================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js')
+      .then((reg) => {
+        console.log('[PWA] Service Worker enregistré', reg.scope);
+
+        // Détecter une nouvelle version disponible
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('[PWA] Nouvelle version détectée — rechargement...');
+              // Auto-reload pour appliquer la mise à jour
+              newWorker.postMessage('SKIP_WAITING');
+              setTimeout(() => window.location.reload(), 500);
+            }
+          });
+        });
+      })
+      .catch((err) => console.warn('[PWA] Échec enregistrement Service Worker:', err));
+  });
+}
+
+// Capter l'événement "beforeinstallprompt" pour afficher notre bouton d'installation custom
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  // Afficher le bouton "Installer l'application" dans la sidebar (s'il existe déjà)
+  const btn = document.getElementById('install-app-btn');
+  if (btn) btn.classList.remove('hidden');
+});
+
+window.addEventListener('appinstalled', () => {
+  console.log('[PWA] Application installée');
+  const btn = document.getElementById('install-app-btn');
+  if (btn) btn.classList.add('hidden');
+  deferredInstallPrompt = null;
+});
+
+// Le clic sur le bouton "Installer" est branché plus bas, après que le DOM soit prêt
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('install-app-btn');
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    const choice = await deferredInstallPrompt.userChoice;
+    console.log('[PWA] Choix utilisateur :', choice.outcome);
+    deferredInstallPrompt = null;
+    btn.classList.add('hidden');
+  });
+});
+
+// ========================================
+// CONFIGURATION FIREBASE — À PERSONNALISER
+// ========================================
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBEKlg-8NC5Z2UFP43w0DRLk9PaGmfIXRg",
+  authDomain: "administration-finance-mmlc.firebaseapp.com",
+  projectId: "administration-finance-mmlc",
+  storageBucket: "administration-finance-mmlc.firebasestorage.app",
+  messagingSenderId: "97479395244",
+  appId: "1:97479395244:web:3f554ec05996509805dc09",
+  measurementId: "G-57MX8W1KTC"
+};
+
+// Si la config n'est pas encore remplie, on affiche l'écran de configuration
+const CONFIG_OK = FIREBASE_CONFIG.apiKey !== "VOTRE_API_KEY";
+
+if (!CONFIG_OK) {
+  document.getElementById('loading-screen').classList.add('hidden');
+  document.getElementById('config-screen').classList.remove('hidden');
+} else {
+  // ========================================
+  // IMPORTS FIREBASE (Modular SDK v10)
+  // ========================================
+  const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js');
+  const {
+    getAuth, signInWithEmailAndPassword, signOut,
+    onAuthStateChanged, createUserWithEmailAndPassword
+  } = await import('https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js');
+  const {
+    getFirestore, collection, doc, setDoc, getDoc, getDocs,
+    addDoc, updateDoc, deleteDoc, query, where, orderBy,
+    onSnapshot, serverTimestamp, Timestamp
+  } = await import('https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js');
+
+  const app = initializeApp(FIREBASE_CONFIG);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // Instance secondaire pour créer des utilisateurs sans déconnecter l'admin
+  let secondaryApp = null;
+  const getSecondaryAuth = async () => {
+    if (!secondaryApp) {
+      secondaryApp = initializeApp(FIREBASE_CONFIG, 'Secondary');
+    }
+    return getAuth(secondaryApp);
+  };
+
+  // ========================================
+  // ÉTAT GLOBAL
+  // ========================================
+  const state = {
+    user: null,        // utilisateur Firebase Auth
+    profile: null,     // profil Firestore (avec rôle)
+    offrandes: [],
+    retraits: [],
+    dons: [],
+    users: [],
+    config: {},
+    charts: {},
+    unsubscribers: []
+  };
+
+  const MOIS_LABELS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+  const CULTE_LABELS = {
+    "ecole-dominicale": "École Dominicale",
+    "culte-adoration": "Culte d'Adoration",
+    "etude-biblique": "Étude Biblique",
+    "veille-nuit": "Veillée de Nuit",
+    "occasionnel": "Service Occasionnel"
+  };
+
+  // ========================================
+  // UTILITAIRES
+  // ========================================
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n) => {
+    const v = parseFloat(n) || 0;
+    return v.toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' CAD';
+  };
+  const fmtDate = (d) => {
+    if (!d) return '—';
+    const date = d.toDate ? d.toDate() : new Date(d);
+    return date.toLocaleDateString('fr-CA');
+  };
+  const todayISO = () => {
+    // Utilise la date locale du navigateur, pas l'UTC
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  function showToast(msg, type = 'info') {
+    const t = $('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type + ' show';
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  function setLoading(el, on) {
+    if (!el) return;
+    if (on) { el.dataset.original = el.innerHTML; el.innerHTML = '...'; el.disabled = true; }
+    else { el.innerHTML = el.dataset.original || el.innerHTML; el.disabled = false; }
+  }
+
+  // ========================================
+  // ROUTAGE (navigation par hash)
+  // ========================================
+  function navigate(page) {
+    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const target = $('page-' + page);
+    if (target) target.classList.add('active');
+    const nav = document.querySelector(`.nav-item[data-page="${page}"]`);
+    if (nav) nav.classList.add('active');
+
+    const titles = {
+      dashboard: 'Tableau de bord',
+      offrandes: 'Gestion des offrandes',
+      retraits: 'Gestion des retraits',
+      rapports: 'Rapports financiers',
+      stats: 'Statistiques',
+      dons: 'Dons en ligne',
+      users: 'Gestion des utilisateurs'
+    };
+    $('page-title').textContent = titles[page] || 'Accueil';
+
+    // Refresh page-specific data
+    if (page === 'dashboard') renderDashboard();
+    if (page === 'users') loadUsers();
+    if (page === 'dons') loadDonsConfig();
+    if (page === 'stats') renderStats();
+
+    // Sidebar mobile
+    $('sidebar').classList.remove('open');
+    window.scrollTo(0, 0);
+  }
+
+  window.addEventListener('hashchange', () => {
+    const page = location.hash.slice(1) || 'dashboard';
+    navigate(page);
+  });
+
+  document.querySelectorAll('.nav-item').forEach(a => {
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const page = a.dataset.page;
+      location.hash = page;
+    });
+  });
+
+  $('menu-toggle').addEventListener('click', () => {
+    $('sidebar').classList.toggle('open');
+  });
+
+  // ========================================
+  // AUTHENTIFICATION
+  // ========================================
+  $('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = $('login-email').value.trim();
+    const password = $('login-password').value;
+    const btn = $('login-btn');
+    setLoading(btn, true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      console.error(err);
+      showToast('Email ou mot de passe incorrect', 'error');
+    } finally {
+      setLoading(btn, false);
+    }
+  });
+
+  $('logout-btn').addEventListener('click', async () => {
+    state.unsubscribers.forEach(u => u && u());
+    state.unsubscribers = [];
+    await signOut(auth);
+  });
+
+  onAuthStateChanged(auth, async (user) => {
+    $('loading-screen').classList.add('hidden');
+    if (user) {
+      // Charger le profil
+      try {
+        const profSnap = await getDoc(doc(db, 'users', user.uid));
+        if (!profSnap.exists()) {
+          alert(
+            'PROFIL INTROUVABLE\n\n' +
+            'Votre compte est bien connecté (UID : ' + user.uid + ')\n' +
+            'mais aucun document profil n\'existe dans la collection "users".\n\n' +
+            'ACTION : Allez dans la console Firebase → Firestore Database → \n' +
+            'créez la collection "users" et ajoutez un document avec :\n' +
+            '   ID du document : ' + user.uid + '\n' +
+            '   Champ "nom" (string) : votre nom\n' +
+            '   Champ "email" (string) : ' + (user.email || '') + '\n' +
+            '   Champ "role" (string) : admin\n\n' +
+            'Puis rechargez la page.'
+          );
+          await signOut(auth);
+          return;
+        }
+        state.user = user;
+        state.profile = profSnap.data();
+        showApp();
+      } catch (err) {
+        console.error('Erreur Firestore:', err);
+        let msg = 'ERREUR DE CHARGEMENT DU PROFIL\n\n';
+        if (err.code === 'permission-denied') {
+          msg += 'Cause : les règles Firestore bloquent l\'accès.\n\n' +
+                 'ACTION : Console Firebase → Firestore Database → onglet "Règles"\n' +
+                 'Collez le contenu du fichier firestore.rules et publiez.';
+        } else if (err.code === 'unavailable' || err.message.includes('offline')) {
+          msg += 'Cause : impossible de joindre Firestore.\n\n' +
+                 'ACTION : Vérifiez votre connexion internet, et que Firestore est activé\n' +
+                 'dans la console Firebase (Firestore Database → Créer la base).';
+        } else if (err.message.includes('Cloud Firestore API has not been used')) {
+          msg += 'Cause : Firestore n\'est pas encore activé pour ce projet.\n\n' +
+                 'ACTION : Console Firebase → Firestore Database → Créer une base de données\n' +
+                 '(mode production, région northamerica-northeast1).';
+        } else {
+          msg += 'Détails techniques : ' + (err.code || '') + '\n' + err.message;
+        }
+        alert(msg);
+        await signOut(auth);
+      }
+    } else {
+      state.user = null;
+      state.profile = null;
+      $('app').classList.add('hidden');
+      $('login-page').classList.remove('hidden');
+    }
+  });
+
+  function showApp() {
+    $('login-page').classList.add('hidden');
+    $('app').classList.remove('hidden');
+
+    const profile = state.profile;
+    const nom = profile.nom || profile.email || '—';
+    const role = profile.role || 'user';
+    $('user-name').textContent = nom;
+    $('user-role').textContent = role.charAt(0).toUpperCase() + role.slice(1);
+    $('user-avatar').textContent = nom.charAt(0).toUpperCase();
+
+    // Afficher l'onglet Utilisateurs seulement aux admins
+    if (role === 'admin') $('nav-users').classList.remove('hidden');
+    else $('nav-users').classList.add('hidden');
+
+    // Date du jour
+    $('today-date').textContent = new Date().toLocaleDateString('fr-CA', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    initData();
+    const page = location.hash.slice(1) || 'dashboard';
+    navigate(page);
+  }
+
+  // ========================================
+  // INITIALISATION DES DONNÉES (listeners temps réel)
+  // ========================================
+  function initData() {
+    // Offrandes
+    const unsubOff = onSnapshot(
+      query(collection(db, 'offrandes'), orderBy('date', 'desc')),
+      (snap) => {
+        state.offrandes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderOffrandes();
+        renderDashboard();
+      }
+    );
+    state.unsubscribers.push(unsubOff);
+
+    // Retraits
+    const unsubRet = onSnapshot(
+      query(collection(db, 'retraits'), orderBy('date', 'desc')),
+      (snap) => {
+        state.retraits = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderRetraits();
+        renderDashboard();
+      }
+    );
+    state.unsubscribers.push(unsubRet);
+
+    // Dons (Stripe automatiques + saisies manuelles)
+    const unsubDons = onSnapshot(
+      query(collection(db, 'dons'), orderBy('date', 'desc')),
+      (snap) => {
+        state.dons = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderDonsStats();
+        renderDonsList();
+        // Les dons en ligne affectent aussi le solde du tableau de bord et celui des retraits
+        renderDashboard();
+        renderRetraits();
+      },
+      (err) => console.warn('Erreur listener dons:', err.message)
+    );
+    state.unsubscribers.push(unsubDons);
+
+    // Configuration (dons)
+    const unsubCfg = onSnapshot(doc(db, 'config', 'general'), (s) => {
+      state.config = s.exists() ? s.data() : {};
+      renderDonsPreview();
+    });
+    state.unsubscribers.push(unsubCfg);
+
+    // Préremplir les selects de date
+    fillMoisAnneeSelects();
+    $('offrande-date').value = todayISO();
+    $('retrait-date').value = todayISO();
+    $('don-date').value = todayISO();
+  }
+
+  function fillMoisAnneeSelects() {
+    const yearNow = new Date().getFullYear();
+    const monthNow = new Date().getMonth();
+    $('rapport-mois').innerHTML = MOIS_LABELS.map((m, i) =>
+      `<option value="${i}" ${i === monthNow ? 'selected' : ''}>${m}</option>`).join('');
+
+    const fillYearSelect = (sel) => {
+      const currentValues = Array.from(sel.options).map(o => parseInt(o.value)).filter(n => !Number.isNaN(n));
+      const currentMax = currentValues.length ? Math.max(...currentValues) : yearNow;
+      const targetMax = Math.max(currentMax, yearNow + 10); // 2037 appears when current year reaches 2027
+      let html = '';
+      for (let y = targetMax; y >= 2020; y--) {
+        html += `<option value="${y}" ${y === yearNow ? 'selected' : ''}>${y}</option>`;
+      }
+      sel.innerHTML = html;
+    };
+
+    [$('rapport-annee'), $('rapport-annual-year'), $('stats-year')].forEach(fillYearSelect);
+  }
+
+  // ========================================
+  // OFFRANDES
+  // ========================================
+  function updateOffrandeFields() {
+    const culte = $('offrande-culte').value;
+    const isEcoleDominicale = culte === 'ecole-dominicale';
+    const hideEcoleOnly = ['etude-biblique', 'veille-nuit', 'occasionnel'].includes(culte);
+
+    $('field-ecole').style.display = isEcoleDominicale ? '' : 'none';
+    if (!isEcoleDominicale) $('off-ecole').value = '';
+
+    ['field-assemblee', 'field-dime', 'field-local'].forEach(id => {
+      $(id).style.display = isEcoleDominicale ? 'none' : '';
+    });
+
+    if (isEcoleDominicale) {
+      $('off-assemblee').value = '';
+      $('off-dime').value = '';
+      $('off-local').value = '';
+    }
+  }
+
+  $('offrande-culte').addEventListener('change', updateOffrandeFields);
+  updateOffrandeFields();
+
+  $('offrande-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+      date: $('offrande-date').value,
+      typeCulte: $('offrande-culte').value,
+      assemblee: parseFloat($('off-assemblee').value) || 0,
+      ecoleDominicale: parseFloat($('off-ecole').value) || 0,
+      dime: parseFloat($('off-dime').value) || 0,
+      local: parseFloat($('off-local').value) || 0,
+      createdAt: serverTimestamp(),
+      createdBy: state.user.uid
+    };
+    try {
+      await addDoc(collection(db, 'offrandes'), data);
+      $('offrande-form').reset();
+      $('offrande-date').value = todayISO();
+      updateOffrandeFields();
+      showToast('Offrande enregistrée', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Erreur lors de l\'enregistrement', 'error');
+    }
+  });
+
+  function renderOffrandes() {
+    const tbody = $('offrandes-list');
+    const search = $('search-offrandes').value.toLowerCase();
+    const filtered = state.offrandes.filter(o => {
+      if (!search) return true;
+      const label = (CULTE_LABELS[o.typeCulte] || '').toLowerCase();
+      return label.includes(search) || o.date.includes(search);
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-400 py-6">Aucune offrande</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = filtered.slice(0, 50).map(o => {
+      const total = (o.assemblee || 0) + (o.ecoleDominicale || 0) + (o.dime || 0) + (o.local || 0);
+      return `<tr>
+        <td>${o.date}</td>
+        <td>${CULTE_LABELS[o.typeCulte] || o.typeCulte}</td>
+        <td class="text-right tabular-nums">${fmt(o.assemblee)}</td>
+        <td class="text-right tabular-nums">${fmt(o.ecoleDominicale)}</td>
+        <td class="text-right tabular-nums">${fmt(o.dime)}</td>
+        <td class="text-right tabular-nums">${fmt(o.local)}</td>
+        <td class="text-right tabular-nums font-bold text-navy">${fmt(total)}</td>
+        <td class="text-center"><button class="btn-danger" data-del-off="${o.id}">🗑</button></td>
+      </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('[data-del-off]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Supprimer cette offrande ?')) return;
+        try {
+          await deleteDoc(doc(db, 'offrandes', btn.dataset.delOff));
+          showToast('Offrande supprimée', 'success');
+        } catch (err) { showToast('Erreur', 'error'); }
+      });
+    });
+  }
+
+  $('search-offrandes').addEventListener('input', renderOffrandes);
+
+  // ===== Export PDF — Historique des Offrandes =====
+  $('offrandes-pdf-btn').addEventListener('click', () => {
+    const search = ($('search-offrandes').value || '').toLowerCase();
+    const filtered = state.offrandes.filter(o => {
+      if (!search) return true;
+      const label = (CULTE_LABELS[o.typeCulte] || '').toLowerCase();
+      return label.includes(search) || (o.date || '').includes(search);
+    });
+
+    if (filtered.length === 0) {
+      showToast('Aucune donnée à exporter', 'error');
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('l', 'mm', 'a4'); // paysage pour mieux loger les colonnes
+
+    // En-tête
+    pdf.setFontSize(16); pdf.setTextColor(0, 32, 91);
+    pdf.text('MINISTÈRE MAISON DE LUMIÈRE', 148, 15, { align: 'center' });
+    pdf.setFontSize(12);
+    pdf.text('Historique des offrandes', 148, 23, { align: 'center' });
+    pdf.setDrawColor(245, 168, 0); pdf.setLineWidth(0.6); pdf.line(15, 27, 282, 27);
+
+    pdf.setFontSize(9); pdf.setTextColor(80, 80, 80);
+    pdf.text(`Date du rapport : ${new Date().toLocaleDateString('fr-CA')}`, 15, 33);
+    if (search) pdf.text(`Filtre actif : "${search}"`, 100, 33);
+    pdf.text(`Nombre d'enregistrements : ${filtered.length}`, 200, 33);
+
+    // En-tête du tableau
+    let y = 42;
+    pdf.setFillColor(0, 32, 91);
+    pdf.rect(15, y - 5, 267, 9, 'F');
+    pdf.setTextColor(255, 255, 255); pdf.setFontSize(9);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Date', 18, y);
+    pdf.text('Culte', 50, y);
+    pdf.text('Assemblée', 130, y, { align: 'right' });
+    pdf.text('École Dom.', 165, y, { align: 'right' });
+    pdf.text('Dîme', 200, y, { align: 'right' });
+    pdf.text('Local', 235, y, { align: 'right' });
+    pdf.text('Total', 278, y, { align: 'right' });
+    pdf.setFont(undefined, 'normal');
+    y += 8;
+
+    // Totaux pour le résumé
+    const totals = { assemblee: 0, ecole: 0, dime: 0, local: 0, grand: 0 };
+
+    pdf.setTextColor(0, 0, 0); pdf.setFontSize(9);
+    filtered.forEach((o, idx) => {
+      if (y > 195) { // nouvelle page
+        pdf.addPage();
+        y = 20;
+      }
+      if (idx % 2 === 0) {
+        pdf.setFillColor(245, 245, 245);
+        pdf.rect(15, y - 5, 267, 7, 'F');
+      }
+      const total = (o.assemblee || 0) + (o.ecoleDominicale || 0) + (o.dime || 0) + (o.local || 0);
+      totals.assemblee += o.assemblee || 0;
+      totals.ecole += o.ecoleDominicale || 0;
+      totals.dime += o.dime || 0;
+      totals.local += o.local || 0;
+      totals.grand += total;
+
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(o.date || '', 18, y);
+      pdf.text((CULTE_LABELS[o.typeCulte] || o.typeCulte || '').slice(0, 40), 50, y);
+      pdf.text(fmt(o.assemblee), 130, y, { align: 'right' });
+      pdf.text(fmt(o.ecoleDominicale), 165, y, { align: 'right' });
+      pdf.text(fmt(o.dime), 200, y, { align: 'right' });
+      pdf.text(fmt(o.local), 235, y, { align: 'right' });
+      pdf.setTextColor(0, 32, 91);
+      pdf.setFont(undefined, 'bold');
+      pdf.text(fmt(total), 278, y, { align: 'right' });
+      pdf.setFont(undefined, 'normal');
+      y += 7;
+    });
+
+    // Ligne des totaux
+    if (y > 190) { pdf.addPage(); y = 20; }
+    pdf.setFillColor(230, 230, 230);
+    pdf.rect(15, y - 5, 267, 10, 'F');
+    pdf.setTextColor(0, 0, 0); pdf.setFont(undefined, 'bold'); pdf.setFontSize(10);
+    pdf.text('TOTAUX', 18, y);
+    pdf.text(fmt(totals.assemblee), 130, y, { align: 'right' });
+    pdf.text(fmt(totals.ecole), 165, y, { align: 'right' });
+    pdf.text(fmt(totals.dime), 200, y, { align: 'right' });
+    pdf.text(fmt(totals.local), 235, y, { align: 'right' });
+    pdf.setTextColor(0, 32, 91);
+    pdf.text(fmt(totals.grand), 278, y, { align: 'right' });
+
+    pdf.setTextColor(120, 120, 120); pdf.setFontSize(8);
+    pdf.setFont(undefined, 'italic');
+    pdf.text('Ministère Maison de Lumière du Canada', 148, 205, { align: 'center' });
+
+    const suffix = search ? `_filtre_${search.replace(/[^a-z0-9]/gi, '_')}` : '';
+    pdf.save(`Historique_Offrandes${suffix}_${new Date().toISOString().slice(0,10)}.pdf`);
+    showToast('PDF téléchargé', 'success');
+  });
+
+  // ========================================
+  // RETRAITS
+  // ========================================
+  $('retrait-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+      date: $('retrait-date').value,
+      nom: $('retrait-nom').value.trim(),
+      montant: parseFloat($('retrait-montant').value) || 0,
+      notes: $('retrait-notes').value.trim(),
+      createdAt: serverTimestamp(),
+      createdBy: state.user.uid
+    };
+    try {
+      await addDoc(collection(db, 'retraits'), data);
+      $('retrait-form').reset();
+      $('retrait-date').value = todayISO();
+      showToast('Retrait enregistré', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Erreur', 'error');
+    }
+  });
+
+  function renderRetraits() {
+    const tbody = $('retraits-list');
+    const totalOff = state.offrandes.reduce((s, o) =>
+      s + (o.assemblee || 0) + (o.ecoleDominicale || 0) + (o.dime || 0) + (o.local || 0), 0);
+    const totalEnLigne = (state.dons || [])
+      .filter(d => d.statut !== 'remboursé')
+      .reduce((s, d) => s + (d.montant || 0), 0);
+    const totalRet = state.retraits.reduce((s, r) => s + (r.montant || 0), 0);
+    $('retrait-solde').textContent = fmt(totalOff + totalEnLigne - totalRet);
+
+    const search = ($('search-retraits')?.value || '').toLowerCase();
+    const filtered = state.retraits.filter(r => {
+      if (!search) return true;
+      return (r.nom || '').toLowerCase().includes(search)
+          || (r.date || '').includes(search)
+          || (r.notes || '').toLowerCase().includes(search);
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-400 py-6">Aucun retrait</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = filtered.slice(0, 50).map(r => `
+      <tr>
+        <td>${r.date}</td>
+        <td>${r.nom}${r.notes ? '<br><span class="text-xs text-gray-500">' + r.notes + '</span>' : ''}</td>
+        <td class="text-right font-bold text-red-600">-${fmt(r.montant)}</td>
+        <td class="text-center"><button class="btn-danger" data-del-ret="${r.id}">🗑</button></td>
+      </tr>`).join('');
+
+    tbody.querySelectorAll('[data-del-ret]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Supprimer ce retrait ?')) return;
+        try {
+          await deleteDoc(doc(db, 'retraits', btn.dataset.delRet));
+          showToast('Retrait supprimé', 'success');
+        } catch (err) { showToast('Erreur', 'error'); }
+      });
+    });
+  }
+
+  // Écouter la recherche retraits
+  $('search-retraits').addEventListener('input', renderRetraits);
+
+  // ===== Export PDF — Historique des Retraits =====
+  $('retraits-pdf-btn').addEventListener('click', () => {
+    const search = ($('search-retraits').value || '').toLowerCase();
+    const filtered = state.retraits.filter(r => {
+      if (!search) return true;
+      return (r.nom || '').toLowerCase().includes(search)
+          || (r.date || '').includes(search)
+          || (r.notes || '').toLowerCase().includes(search);
+    });
+
+    if (filtered.length === 0) {
+      showToast('Aucune donnée à exporter', 'error');
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+
+    pdf.setFontSize(16); pdf.setTextColor(0, 32, 91);
+    pdf.text('MINISTÈRE MAISON DE LUMIÈRE', 105, 18, { align: 'center' });
+    pdf.setFontSize(12);
+    pdf.text('Historique des retraits', 105, 26, { align: 'center' });
+    pdf.setDrawColor(245, 168, 0); pdf.setLineWidth(0.6); pdf.line(20, 30, 190, 30);
+
+    pdf.setFontSize(9); pdf.setTextColor(80, 80, 80);
+    pdf.text(`Date du rapport : ${new Date().toLocaleDateString('fr-CA')}`, 20, 37);
+    if (search) pdf.text(`Filtre actif : "${search}"`, 80, 37);
+    pdf.text(`Nombre d'enregistrements : ${filtered.length}`, 145, 37);
+
+    // En-tête tableau
+    let y = 47;
+    pdf.setFillColor(0, 32, 91);
+    pdf.rect(20, y - 5, 170, 9, 'F');
+    pdf.setTextColor(255, 255, 255); pdf.setFontSize(10);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Date', 23, y);
+    pdf.text('Description', 55, y);
+    pdf.text('Montant', 186, y, { align: 'right' });
+    pdf.setFont(undefined, 'normal');
+    y += 8;
+
+    let total = 0;
+    pdf.setTextColor(0, 0, 0); pdf.setFontSize(10);
+    filtered.forEach((r, idx) => {
+      if (y > 265) { pdf.addPage(); y = 20; }
+      if (idx % 2 === 0) {
+        pdf.setFillColor(245, 245, 245);
+        pdf.rect(20, y - 5, 170, 8, 'F');
+      }
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(r.date || '', 23, y);
+      const desc = (r.nom || '') + (r.notes ? ' — ' + r.notes : '');
+      pdf.text(desc.length > 65 ? desc.slice(0, 65) + '...' : desc, 55, y);
+      pdf.setTextColor(180, 0, 0);
+      pdf.text('-' + fmt(r.montant), 186, y, { align: 'right' });
+      total += r.montant || 0;
+      y += 8;
+    });
+
+    // Ligne du total
+    if (y > 260) { pdf.addPage(); y = 20; }
+    pdf.setFillColor(230, 230, 230);
+    pdf.rect(20, y - 5, 170, 10, 'F');
+    pdf.setTextColor(0, 0, 0); pdf.setFont(undefined, 'bold'); pdf.setFontSize(11);
+    pdf.text('TOTAL DES RETRAITS', 23, y);
+    pdf.setTextColor(180, 0, 0);
+    pdf.text('-' + fmt(total), 186, y, { align: 'right' });
+
+    pdf.setTextColor(120, 120, 120); pdf.setFontSize(9);
+    pdf.setFont(undefined, 'italic');
+    pdf.text('Ministère Maison de Lumière du Canada', 105, 285, { align: 'center' });
+
+    const suffix = search ? `_filtre_${search.replace(/[^a-z0-9]/gi, '_')}` : '';
+    pdf.save(`Historique_Retraits${suffix}_${new Date().toISOString().slice(0,10)}.pdf`);
+    showToast('PDF téléchargé', 'success');
+  });
+
+  // ========================================
+  // DASHBOARD
+  // ========================================
+  function renderDashboard() {
+    const year = new Date().getFullYear();
+    const month = new Date().getMonth();
+
+    // ============ CALCUL GLOBAL (TOUTES PÉRIODES) ============
+    const totalOffGlobal = state.offrandes.reduce((s, o) =>
+      s + (o.assemblee || 0) + (o.ecoleDominicale || 0) + (o.dime || 0) + (o.local || 0), 0);
+    const totalEnLigneGlobal = (state.dons || [])
+      .filter(d => d.statut !== 'remboursé')
+      .reduce((s, d) => s + (d.montant || 0), 0);
+    const totalRetraitsGlobal = state.retraits.reduce((s, r) => s + (r.montant || 0), 0);
+    const totalOffrandesGlobalAll = totalOffGlobal + totalEnLigneGlobal;
+    const soldeGlobal = totalOffrandesGlobalAll - totalRetraitsGlobal;
+
+    $('stat-solde-global').textContent = fmt(soldeGlobal);
+    $('stat-offrandes-global').textContent = fmt(totalOffrandesGlobalAll);
+    $('stat-retraits-global').textContent = fmt(totalRetraitsGlobal);
+
+    // ============ CALCUL DE L'ANNÉE EN COURS ============
+    const offYear = state.offrandes.filter(o => o.date && o.date.startsWith(year.toString()));
+    const retYear = state.retraits.filter(r => r.date && r.date.startsWith(year.toString()));
+    const donsYear = (state.dons || []).filter(d =>
+      d.date && d.date.startsWith(year.toString()) && d.statut !== 'remboursé'
+    );
+
+    const totalOff = offYear.reduce((s, o) =>
+      s + (o.assemblee || 0) + (o.ecoleDominicale || 0) + (o.dime || 0) + (o.local || 0), 0);
+    const totalEnLigne = donsYear.reduce((s, d) => s + (d.montant || 0), 0);
+    const totalOffrandesGlobal = totalOff + totalEnLigne;
+    const totalRet = retYear.reduce((s, r) => s + (r.montant || 0), 0);
+
+    $('stat-total-offrandes').textContent = fmt(totalOffrandesGlobal);
+    $('stat-total-retraits').textContent = fmt(totalRet);
+    $('stat-solde').textContent = fmt(totalOffrandesGlobal - totalRet);
+
+    const cultesThisMonth = state.offrandes.filter(o => {
+      if (!o.date) return false;
+      const d = new Date(o.date);
+      return d.getFullYear() === year && d.getMonth() === month;
+    }).length;
+    $('stat-cultes').textContent = cultesThisMonth;
+    $('stat-cultes-month').textContent = MOIS_LABELS[month] + ' ' + year;
+
+    // Graphique mensuel — offrandes classiques + en ligne empilés
+    const monthlyOff = Array(12).fill(0);
+    const monthlyEnLigne = Array(12).fill(0);
+    offYear.forEach(o => {
+      const m = new Date(o.date).getMonth();
+      monthlyOff[m] += (o.assemblee || 0) + (o.ecoleDominicale || 0) + (o.dime || 0) + (o.local || 0);
+    });
+    donsYear.forEach(d => {
+      const m = new Date(d.date).getMonth();
+      monthlyEnLigne[m] += d.montant || 0;
+    });
+
+    if (state.charts.monthly) state.charts.monthly.destroy();
+    const ctx1 = $('chart-monthly');
+    if (ctx1) {
+      state.charts.monthly = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+          labels: MOIS_LABELS.map(m => m.slice(0,3)),
+          datasets: [
+            {
+              label: 'Offrandes (CAD)',
+              data: monthlyOff,
+              backgroundColor: '#00205B',
+              borderRadius: 4
+            },
+            {
+              label: 'En Ligne (CAD)',
+              data: monthlyEnLigne,
+              backgroundColor: '#9333ea',
+              borderRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}` } }
+          },
+          scales: {
+            x: { stacked: true },
+            y: { stacked: true, beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    // Répartition (donut) avec En Ligne
+    const rep = offYear.reduce((acc, o) => {
+      acc.assemblee += o.assemblee || 0;
+      acc.ecole += o.ecoleDominicale || 0;
+      acc.dime += o.dime || 0;
+      acc.local += o.local || 0;
+      return acc;
+    }, { assemblee: 0, ecole: 0, dime: 0, local: 0 });
+
+    if (state.charts.rep) state.charts.rep.destroy();
+    const ctx2 = $('chart-repartition');
+    if (ctx2) {
+      state.charts.rep = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+          labels: ['Assemblée', 'École Dom.', 'Dîme', 'Local', 'En Ligne'],
+          datasets: [{
+            data: [rep.assemblee, rep.ecole, rep.dime, rep.local, totalEnLigne],
+            backgroundColor: ['#00205B', '#F5A800', '#5b21b6', '#059669', '#9333ea']
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${fmt(ctx.parsed)}` } }
+          }
+        }
+      });
+    }
+
+    // Dernières opérations (offrandes + retraits + dons en ligne)
+    const operations = [
+      ...state.offrandes.slice(0, 10).map(o => ({
+        date: o.date, type: 'Offrande',
+        desc: CULTE_LABELS[o.typeCulte] || o.typeCulte,
+        montant: (o.assemblee || 0) + (o.ecoleDominicale || 0) + (o.dime || 0) + (o.local || 0),
+        sign: '+'
+      })),
+      ...(state.dons || []).filter(d => d.statut !== 'remboursé').slice(0, 10).map(d => ({
+        date: d.date, type: 'En Ligne',
+        desc: (METHODE_LABELS[d.methode] || d.methode || '—') + ' — ' + (d.nom || 'Anonyme'),
+        montant: d.montant || 0,
+        sign: '+'
+      })),
+      ...state.retraits.slice(0, 10).map(r => ({
+        date: r.date, type: 'Retrait', desc: r.nom,
+        montant: r.montant, sign: '-'
+      }))
+    ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
+
+    const tbody = $('recent-operations');
+    if (operations.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-400 py-6">Aucune opération</td></tr>';
+    } else {
+      tbody.innerHTML = operations.map(op => {
+        let badgeClass = 'badge-tresorier';
+        if (op.type === 'Retrait') badgeClass = 'badge-admin';
+        if (op.type === 'En Ligne') badgeClass = 'badge-pasteur';
+        return `
+        <tr>
+          <td>${op.date}</td>
+          <td><span class="badge ${badgeClass}">${op.type}</span></td>
+          <td>${op.desc}</td>
+          <td class="text-right font-bold ${op.sign === '+' ? 'text-green-600' : 'text-red-600'}">
+            ${op.sign}${fmt(op.montant)}
+          </td>
+        </tr>`;
+      }).join('');
+    }
+  }
+
+  // ========================================
+  // RAPPORTS
+  // ========================================
+  $('rapport-gen-btn').addEventListener('click', () => {
+    const mois = parseInt($('rapport-mois').value);
+    const annee = parseInt($('rapport-annee').value);
+    genererRapportMensuel(mois, annee);
+  });
+
+  function genererRapportMensuel(mois, annee) {
+    // Offrandes du mois
+    const offFiltered = state.offrandes.filter(o => {
+      if (!o.date) return false;
+      const d = new Date(o.date);
+      return d.getFullYear() === annee && d.getMonth() === mois;
+    });
+
+    // Retraits du mois
+    const retFiltered = state.retraits.filter(r => {
+      if (!r.date) return false;
+      const d = new Date(r.date);
+      return d.getFullYear() === annee && d.getMonth() === mois;
+    });
+
+    // Dons en ligne du mois (toutes méthodes confondues, hors remboursés)
+    const donsFiltered = (state.dons || []).filter(d => {
+      if (!d.date) return false;
+      if (d.statut === 'remboursé') return false;
+      const dt = new Date(d.date);
+      return dt.getFullYear() === annee && dt.getMonth() === mois;
+    });
+
+    const totals = { assemblee: 0, ecole: 0, dime: 0, local: 0, enLigne: 0 };
+    offFiltered.forEach(o => {
+      totals.assemblee += o.assemblee || 0;
+      totals.ecole += o.ecoleDominicale || 0;
+      totals.dime += o.dime || 0;
+      totals.local += o.local || 0;
+    });
+    totals.enLigne = donsFiltered.reduce((s, d) => s + (d.montant || 0), 0);
+
+    const totalOffrandes = totals.assemblee + totals.ecole + totals.dime + totals.local + totals.enLigne;
+    const totalRetraits = retFiltered.reduce((s, r) => s + (r.montant || 0), 0);
+    const soldeMois = totalOffrandes - totalRetraits;
+
+    // Construction du tableau HTML détaillé
+    let retraitRows = '';
+    if (retFiltered.length > 0) {
+      retraitRows = retFiltered.map(r => `
+        <tr class="text-sm">
+          <td class="py-1 pl-4 text-gray-600">${r.date} — ${r.nom}</td>
+          <td class="text-right py-1 text-red-600">-${fmt(r.montant)}</td>
+        </tr>`).join('');
+    }
+
+    $('rapport-result').innerHTML = `
+      <div class="p-5 bg-green-50 border border-green-200 rounded-lg">
+        <h4 class="font-bold text-green-900 mb-3">Rapport — ${MOIS_LABELS[mois]} ${annee}</h4>
+
+        <div class="bg-white rounded-lg p-4 mb-3">
+          <p class="text-xs uppercase text-gray-500 font-bold mb-2">Offrandes du mois</p>
+          <table class="w-full text-sm">
+            <tr><td class="py-1">Offrande de l'Assemblée</td><td class="text-right py-1 font-bold">${fmt(totals.assemblee)}</td></tr>
+            <tr><td class="py-1">École Dominicale</td><td class="text-right py-1 font-bold">${fmt(totals.ecole)}</td></tr>
+            <tr><td class="py-1">Dîme</td><td class="text-right py-1 font-bold">${fmt(totals.dime)}</td></tr>
+            <tr><td class="py-1">Offrande Locale</td><td class="text-right py-1 font-bold">${fmt(totals.local)}</td></tr>
+            <tr><td class="py-1">En Ligne <span class="text-xs text-gray-500">(${donsFiltered.length} don${donsFiltered.length > 1 ? 's' : ''})</span></td><td class="text-right py-1 font-bold text-purple-700">${fmt(totals.enLigne)}</td></tr>
+            <tr class="border-t border-gray-300">
+              <td class="py-2 font-bold text-green-700">Total offrandes</td>
+              <td class="text-right py-2 font-bold text-green-700">${fmt(totalOffrandes)}</td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="bg-white rounded-lg p-4 mb-3">
+          <p class="text-xs uppercase text-gray-500 font-bold mb-2">Retraits du mois</p>
+          ${retFiltered.length === 0 ?
+            '<p class="text-sm text-gray-400 italic py-2">Aucun retrait pour cette période</p>' :
+            `<table class="w-full text-sm">${retraitRows}</table>`}
+          <div class="border-t border-gray-300 mt-2 pt-2 flex justify-between">
+            <span class="font-bold text-red-700">Total retraits</span>
+            <span class="font-bold text-red-700">-${fmt(totalRetraits)}</span>
+          </div>
+        </div>
+
+        <div class="bg-navy text-white rounded-lg p-4">
+          <div class="flex justify-between items-center">
+            <span class="font-bold">SOLDE DU MOIS</span>
+            <span class="font-bold text-2xl ${soldeMois < 0 ? 'text-red-300' : 'text-gold'}">${fmt(soldeMois)}</span>
+          </div>
+          <p class="text-xs text-white/70 mt-1">Offrandes (avec dons en ligne) − Retraits = Solde net du mois</p>
+        </div>
+      </div>
+    `;
+    $('rapport-result').classList.remove('hidden');
+    state._lastRapport = { mois, annee, totals, totalOffrandes, totalRetraits, soldeMois, retraits: retFiltered, donsCount: donsFiltered.length };
+  }
+
+  $('rapport-pdf-btn').addEventListener('click', () => {
+    if (!state._lastRapport) { showToast('Générez d\'abord un rapport', 'error'); return; }
+    const { mois, annee, totals, totalOffrandes, totalRetraits, soldeMois, retraits } = state._lastRapport;
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+
+    // En-tête
+    pdf.setFontSize(18); pdf.setTextColor(0, 32, 91);
+    pdf.text('MINISTÈRE MAISON DE LUMIÈRE', 105, 20, { align: 'center' });
+    pdf.setFontSize(14);
+    pdf.text('Rapport mensuel — Bilan financier', 105, 30, { align: 'center' });
+    pdf.setDrawColor(245, 168, 0); pdf.setLineWidth(0.8); pdf.line(20, 35, 190, 35);
+
+    pdf.setFontSize(12); pdf.setTextColor(0, 0, 0);
+    pdf.text(`Période : ${MOIS_LABELS[mois]} ${annee}`, 20, 48);
+    pdf.text(`Date du rapport : ${new Date().toLocaleDateString('fr-CA')}`, 20, 56);
+
+    // Section Offrandes
+    pdf.setFontSize(13); pdf.setTextColor(0, 100, 0);
+    pdf.text('OFFRANDES DU MOIS', 20, 72);
+    pdf.setFontSize(11); pdf.setTextColor(0, 0, 0);
+    let y = 82;
+    [['Assemblée', totals.assemblee], ['École Dominicale', totals.ecole],
+     ['Dîme', totals.dime], ['Offrande Locale', totals.local],
+     ['En Ligne (Stripe, PayPal, Interac...)', totals.enLigne || 0]].forEach(([l, v]) => {
+      pdf.text(l, 25, y); pdf.text(fmt(v), 180, y, { align: 'right' }); y += 8;
+    });
+    pdf.setDrawColor(0, 0, 0); pdf.line(25, y, 180, y); y += 6;
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Total offrandes', 25, y); pdf.text(fmt(totalOffrandes), 180, y, { align: 'right' });
+    pdf.setFont(undefined, 'normal');
+    y += 14;
+
+    // Section Retraits
+    pdf.setFontSize(13); pdf.setTextColor(180, 0, 0);
+    pdf.text('RETRAITS DU MOIS', 20, y); y += 10;
+    pdf.setFontSize(10); pdf.setTextColor(0, 0, 0);
+    if (retraits.length === 0) {
+      pdf.setTextColor(120, 120, 120);
+      pdf.text('Aucun retrait pour cette période', 25, y); y += 8;
+      pdf.setTextColor(0, 0, 0);
+    } else {
+      retraits.forEach(r => {
+        if (y > 250) { pdf.addPage(); y = 20; }
+        const ligne = `${r.date} — ${r.nom}`;
+        pdf.text(ligne.length > 60 ? ligne.slice(0, 60) + '...' : ligne, 25, y);
+        pdf.text('-' + fmt(r.montant), 180, y, { align: 'right' });
+        y += 7;
+      });
+    }
+    pdf.setDrawColor(0, 0, 0); pdf.line(25, y, 180, y); y += 6;
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Total retraits', 25, y); pdf.text('-' + fmt(totalRetraits), 180, y, { align: 'right' });
+    pdf.setFont(undefined, 'normal');
+    y += 16;
+
+    // Solde du mois
+    if (y > 240) { pdf.addPage(); y = 20; }
+    pdf.setFillColor(0, 32, 91);
+    pdf.rect(20, y - 5, 170, 18, 'F');
+    pdf.setTextColor(255, 255, 255); pdf.setFontSize(13);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('SOLDE DU MOIS', 25, y + 6);
+    pdf.text(fmt(soldeMois), 185, y + 6, { align: 'right' });
+
+    // Pied de page
+    pdf.setTextColor(120, 120, 120); pdf.setFontSize(9);
+    pdf.setFont(undefined, 'italic');
+    pdf.text('Ministère Maison de Lumière du Canada — Gestion financière', 105, 285, { align: 'center' });
+
+    pdf.save(`Rapport_${MOIS_LABELS[mois]}_${annee}.pdf`);
+    showToast('PDF téléchargé', 'success');
+  });
+
+  $('rapport-annual-btn').addEventListener('click', () => {
+    const annee = parseInt($('rapport-annual-year').value);
+    genererRapportAnnuel(annee);
+  });
+
+  function genererRapportAnnuel(annee) {
+    // Calcul des données par mois
+    const monthly = Array(12).fill(null).map((_, m) => {
+      const off = state.offrandes.filter(o => {
+        if (!o.date) return false;
+        const d = new Date(o.date);
+        return d.getFullYear() === annee && d.getMonth() === m;
+      });
+      const ret = state.retraits.filter(r => {
+        if (!r.date) return false;
+        const d = new Date(r.date);
+        return d.getFullYear() === annee && d.getMonth() === m;
+      });
+      const dons = (state.dons || []).filter(d => {
+        if (!d.date) return false;
+        if (d.statut === 'remboursé') return false;
+        const dt = new Date(d.date);
+        return dt.getFullYear() === annee && dt.getMonth() === m;
+      });
+      const offClassiques = off.reduce((s, o) =>
+        s + (o.assemblee || 0) + (o.ecoleDominicale || 0) + (o.dime || 0) + (o.local || 0), 0);
+      const enLigne = dons.reduce((s, d) => s + (d.montant || 0), 0);
+      const offTotal = offClassiques + enLigne;
+      const retTotal = ret.reduce((s, r) => s + (r.montant || 0), 0);
+      return {
+        offrandes: offClassiques,
+        enLigne: enLigne,
+        offrandesTotal: offTotal,
+        retraits: retTotal,
+        solde: offTotal - retTotal
+      };
+    });
+
+    const totalOff = monthly.reduce((s, m) => s + m.offrandes, 0);
+    const totalEnLigne = monthly.reduce((s, m) => s + m.enLigne, 0);
+    const totalOffrandesGlobal = totalOff + totalEnLigne;
+    const totalRet = monthly.reduce((s, m) => s + m.retraits, 0);
+    const soldeAnnee = totalOffrandesGlobal - totalRet;
+
+    $('rapport-annual-result').classList.remove('hidden');
+    $('rapport-annual-result').innerHTML = `
+      <div class="p-5 bg-amber-50 border border-amber-200 rounded-lg">
+        <h4 class="font-bold text-amber-900 mb-3">Bilan annuel ${annee}</h4>
+
+        <div class="overflow-x-auto bg-white rounded-lg mb-3">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="text-left py-2 px-3">Mois</th>
+                <th class="text-right py-2 px-3 text-green-700">Offrandes</th>
+                <th class="text-right py-2 px-3 text-purple-700">En Ligne</th>
+                <th class="text-right py-2 px-3 text-red-700">Retraits</th>
+                <th class="text-right py-2 px-3 text-navy">Solde</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${MOIS_LABELS.map((m, i) => `
+                <tr class="border-t border-gray-100">
+                  <td class="py-2 px-3">${m}</td>
+                  <td class="text-right py-2 px-3 text-green-700">${fmt(monthly[i].offrandes)}</td>
+                  <td class="text-right py-2 px-3 text-purple-700">${fmt(monthly[i].enLigne)}</td>
+                  <td class="text-right py-2 px-3 text-red-700">${monthly[i].retraits > 0 ? '-' : ''}${fmt(monthly[i].retraits)}</td>
+                  <td class="text-right py-2 px-3 font-bold ${monthly[i].solde < 0 ? 'text-red-600' : 'text-navy'}">${fmt(monthly[i].solde)}</td>
+                </tr>`).join('')}
+            </tbody>
+            <tfoot class="bg-gray-50 font-bold">
+              <tr>
+                <td class="py-2 px-3">TOTAL</td>
+                <td class="text-right py-2 px-3 text-green-700">${fmt(totalOff)}</td>
+                <td class="text-right py-2 px-3 text-purple-700">${fmt(totalEnLigne)}</td>
+                <td class="text-right py-2 px-3 text-red-700">-${fmt(totalRet)}</td>
+                <td class="text-right py-2 px-3 ${soldeAnnee < 0 ? 'text-red-600' : 'text-navy'}">${fmt(soldeAnnee)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="bg-navy text-white p-4 rounded-lg flex justify-between items-center">
+          <span class="font-bold">SOLDE ANNUEL ${annee}</span>
+          <span class="font-bold text-2xl ${soldeAnnee < 0 ? 'text-red-300' : 'text-gold'}">${fmt(soldeAnnee)}</span>
+        </div>
+      </div>`;
+
+    state._lastAnnualRapport = { annee, monthly, totalOff, totalEnLigne, totalOffrandesGlobal, totalRet, soldeAnnee };
+  }
+
+  $('rapport-annual-pdf-btn').addEventListener('click', () => {
+    if (!state._lastAnnualRapport) { showToast('Générez d\'abord un rapport annuel', 'error'); return; }
+    const { annee, monthly, totalOff, totalEnLigne, totalRet, soldeAnnee } = state._lastAnnualRapport;
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('l', 'mm', 'a4'); // paysage pour loger les 5 colonnes
+
+    pdf.setFontSize(18); pdf.setTextColor(0, 32, 91);
+    pdf.text('MINISTÈRE MAISON DE LUMIÈRE', 148, 18, { align: 'center' });
+    pdf.setFontSize(14);
+    pdf.text(`Bilan annuel ${annee}`, 148, 27, { align: 'center' });
+    pdf.setDrawColor(245, 168, 0); pdf.setLineWidth(0.8); pdf.line(15, 32, 282, 32);
+
+    pdf.setFontSize(11); pdf.setTextColor(0, 0, 0);
+    pdf.text(`Date du rapport : ${new Date().toLocaleDateString('fr-CA')}`, 15, 41);
+
+    // Positions de colonnes (paysage : largeur utile 282mm)
+    const COL = {
+      mois: 22,
+      offrandes: 100,
+      enLigne: 145,
+      retraits: 195,
+      solde: 270
+    };
+
+    // En-tête du tableau
+    let y = 55;
+    pdf.setFillColor(0, 32, 91);
+    pdf.rect(15, y - 5, 267, 9, 'F');
+    pdf.setTextColor(255, 255, 255); pdf.setFontSize(10);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Mois', COL.mois, y);
+    pdf.text('Offrandes', COL.offrandes, y, { align: 'right' });
+    pdf.text('En Ligne', COL.enLigne, y, { align: 'right' });
+    pdf.text('Retraits', COL.retraits, y, { align: 'right' });
+    pdf.text('Solde', COL.solde, y, { align: 'right' });
+    pdf.setFont(undefined, 'normal');
+    y += 8;
+
+    pdf.setTextColor(0, 0, 0); pdf.setFontSize(10);
+    MOIS_LABELS.forEach((m, i) => {
+      if (i % 2 === 0) {
+        pdf.setFillColor(245, 245, 245);
+        pdf.rect(15, y - 5, 267, 8, 'F');
+      }
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(m, COL.mois, y);
+      pdf.setTextColor(0, 100, 0);
+      pdf.text(fmt(monthly[i].offrandes), COL.offrandes, y, { align: 'right' });
+      pdf.setTextColor(91, 33, 182);
+      pdf.text(fmt(monthly[i].enLigne || 0), COL.enLigne, y, { align: 'right' });
+      pdf.setTextColor(180, 0, 0);
+      pdf.text(monthly[i].retraits > 0 ? '-' + fmt(monthly[i].retraits) : fmt(0), COL.retraits, y, { align: 'right' });
+      pdf.setTextColor(monthly[i].solde < 0 ? 180 : 0, monthly[i].solde < 0 ? 0 : 32, monthly[i].solde < 0 ? 0 : 91);
+      pdf.text(fmt(monthly[i].solde), COL.solde, y, { align: 'right' });
+      y += 7;
+    });
+
+    // Total
+    pdf.setFillColor(230, 230, 230);
+    pdf.rect(15, y - 5, 267, 9, 'F');
+    pdf.setTextColor(0, 0, 0); pdf.setFont(undefined, 'bold');
+    pdf.text('TOTAL', COL.mois, y);
+    pdf.setTextColor(0, 100, 0);
+    pdf.text(fmt(totalOff), COL.offrandes, y, { align: 'right' });
+    pdf.setTextColor(91, 33, 182);
+    pdf.text(fmt(totalEnLigne || 0), COL.enLigne, y, { align: 'right' });
+    pdf.setTextColor(180, 0, 0);
+    pdf.text('-' + fmt(totalRet), COL.retraits, y, { align: 'right' });
+    pdf.setTextColor(0, 32, 91);
+    pdf.text(fmt(soldeAnnee), COL.solde, y, { align: 'right' });
+    y += 18;
+
+    // Solde annuel
+    pdf.setFillColor(0, 32, 91);
+    pdf.rect(15, y - 5, 267, 18, 'F');
+    pdf.setTextColor(255, 255, 255); pdf.setFontSize(13);
+    pdf.setFont(undefined, 'bold');
+    pdf.text(`SOLDE ANNUEL ${annee}`, 22, y + 6);
+    pdf.text(fmt(soldeAnnee), 277, y + 6, { align: 'right' });
+
+    pdf.setTextColor(120, 120, 120); pdf.setFontSize(9);
+    pdf.setFont(undefined, 'italic');
+    pdf.text('Ministère Maison de Lumière du Canada — Bilan financier annuel', 148, 200, { align: 'center' });
+
+    pdf.save(`Bilan_Annuel_${annee}.pdf`);
+    showToast('PDF téléchargé', 'success');
+  });
+
+  // ========================================
+  // RAPPORT GLOBAL — TOUTES LES ANNÉES
+  // ========================================
+  $('rapport-global-btn').addEventListener('click', genererRapportGlobal);
+
+  function genererRapportGlobal() {
+    // Identifier toutes les années qui ont au moins une transaction
+    const annees = new Set();
+    state.offrandes.forEach(o => { if (o.date) annees.add(new Date(o.date).getFullYear()); });
+    state.retraits.forEach(r => { if (r.date) annees.add(new Date(r.date).getFullYear()); });
+    (state.dons || []).forEach(d => { if (d.date) annees.add(new Date(d.date).getFullYear()); });
+
+    const yearsList = [...annees].sort((a, b) => a - b);
+
+    if (yearsList.length === 0) {
+      $('rapport-global-result').classList.remove('hidden');
+      $('rapport-global-result').innerHTML = '<div class="p-4 bg-gray-50 rounded-lg text-center text-gray-500">Aucune donnée disponible pour générer le bilan global.</div>';
+      state._lastGlobalRapport = null;
+      return;
+    }
+
+    // Calcul des totaux par année
+    const data = yearsList.map(annee => {
+      const off = state.offrandes.filter(o => o.date && new Date(o.date).getFullYear() === annee);
+      const ret = state.retraits.filter(r => r.date && new Date(r.date).getFullYear() === annee);
+      const dons = (state.dons || []).filter(d =>
+        d.date && new Date(d.date).getFullYear() === annee && d.statut !== 'remboursé'
+      );
+
+      const offrandes = off.reduce((s, o) =>
+        s + (o.assemblee || 0) + (o.ecoleDominicale || 0) + (o.dime || 0) + (o.local || 0), 0);
+      const enLigne = dons.reduce((s, d) => s + (d.montant || 0), 0);
+      const retraits = ret.reduce((s, r) => s + (r.montant || 0), 0);
+      const total = offrandes + enLigne;
+      const solde = total - retraits;
+
+      return { annee, offrandes, enLigne, total, retraits, solde };
+    });
+
+    const grandTotalOff = data.reduce((s, d) => s + d.offrandes, 0);
+    const grandTotalEnLigne = data.reduce((s, d) => s + d.enLigne, 0);
+    const grandTotalGeneral = grandTotalOff + grandTotalEnLigne;
+    const grandTotalRet = data.reduce((s, d) => s + d.retraits, 0);
+    const grandSolde = grandTotalGeneral - grandTotalRet;
+
+    $('rapport-global-result').classList.remove('hidden');
+    $('rapport-global-result').innerHTML = `
+      <div class="p-5 bg-green-50 border border-green-200 rounded-lg">
+        <h4 class="font-bold text-green-900 mb-3">🌍 Bilan global — ${yearsList[0]} à ${yearsList[yearsList.length - 1]}</h4>
+
+        <div class="overflow-x-auto bg-white rounded-lg mb-3">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="text-left py-2 px-3">Année</th>
+                <th class="text-right py-2 px-3 text-green-700">Offrandes</th>
+                <th class="text-right py-2 px-3 text-purple-700">En Ligne</th>
+                <th class="text-right py-2 px-3 text-navy">Total recettes</th>
+                <th class="text-right py-2 px-3 text-red-700">Retraits</th>
+                <th class="text-right py-2 px-3 text-navy">Solde</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map(d => `
+                <tr class="border-t border-gray-100">
+                  <td class="py-2 px-3 font-bold">${d.annee}</td>
+                  <td class="text-right py-2 px-3 text-green-700">${fmt(d.offrandes)}</td>
+                  <td class="text-right py-2 px-3 text-purple-700">${fmt(d.enLigne)}</td>
+                  <td class="text-right py-2 px-3 text-navy font-bold">${fmt(d.total)}</td>
+                  <td class="text-right py-2 px-3 text-red-700">${d.retraits > 0 ? '-' : ''}${fmt(d.retraits)}</td>
+                  <td class="text-right py-2 px-3 font-bold ${d.solde < 0 ? 'text-red-600' : 'text-navy'}">${fmt(d.solde)}</td>
+                </tr>`).join('')}
+            </tbody>
+            <tfoot class="bg-gray-100 font-bold">
+              <tr>
+                <td class="py-2 px-3">GRAND TOTAL</td>
+                <td class="text-right py-2 px-3 text-green-700">${fmt(grandTotalOff)}</td>
+                <td class="text-right py-2 px-3 text-purple-700">${fmt(grandTotalEnLigne)}</td>
+                <td class="text-right py-2 px-3 text-navy">${fmt(grandTotalGeneral)}</td>
+                <td class="text-right py-2 px-3 text-red-700">-${fmt(grandTotalRet)}</td>
+                <td class="text-right py-2 px-3 ${grandSolde < 0 ? 'text-red-600' : 'text-navy'}">${fmt(grandSolde)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="bg-navy text-white p-4 rounded-lg flex justify-between items-center">
+          <div>
+            <span class="text-xs uppercase text-white/70 block">Solde net — toutes périodes confondues</span>
+            <span class="text-xs text-white/70">${yearsList.length} année${yearsList.length > 1 ? 's' : ''} de données</span>
+          </div>
+          <span class="font-bold text-3xl ${grandSolde < 0 ? 'text-red-300' : 'text-gold'}">${fmt(grandSolde)}</span>
+        </div>
+      </div>`;
+
+    state._lastGlobalRapport = {
+      yearsList, data,
+      grandTotalOff, grandTotalEnLigne, grandTotalGeneral, grandTotalRet, grandSolde
+    };
+  }
+
+  $('rapport-global-pdf-btn').addEventListener('click', () => {
+    if (!state._lastGlobalRapport) {
+      showToast("Générez d'abord le rapport global", 'error');
+      return;
+    }
+    const { yearsList, data, grandTotalOff, grandTotalEnLigne, grandTotalGeneral, grandTotalRet, grandSolde } = state._lastGlobalRapport;
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('l', 'mm', 'a4'); // paysage pour les 6 colonnes
+
+    // En-tête
+    pdf.setFontSize(18); pdf.setTextColor(0, 32, 91);
+    pdf.text('MINISTÈRE MAISON DE LUMIÈRE DU CANADA', 148, 18, { align: 'center' });
+    pdf.setFontSize(13);
+    pdf.text(`Bilan global — toutes les années (${yearsList[0]} à ${yearsList[yearsList.length - 1]})`, 148, 27, { align: 'center' });
+    pdf.setDrawColor(245, 168, 0); pdf.setLineWidth(0.8); pdf.line(15, 32, 282, 32);
+
+    pdf.setFontSize(10); pdf.setTextColor(80, 80, 80);
+    pdf.text(`Date du rapport : ${new Date().toLocaleDateString('fr-CA')}`, 15, 41);
+    pdf.text(`Nombre d'années : ${yearsList.length}`, 230, 41);
+
+    // Colonnes
+    const COL = {
+      annee: 22,
+      offrandes: 80,
+      enLigne: 122,
+      total: 168,
+      retraits: 215,
+      solde: 270
+    };
+
+    // En-tête tableau
+    let y = 55;
+    pdf.setFillColor(0, 32, 91);
+    pdf.rect(15, y - 5, 267, 9, 'F');
+    pdf.setTextColor(255, 255, 255); pdf.setFontSize(10);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Année', COL.annee, y);
+    pdf.text('Offrandes', COL.offrandes, y, { align: 'right' });
+    pdf.text('En Ligne', COL.enLigne, y, { align: 'right' });
+    pdf.text('Total recettes', COL.total, y, { align: 'right' });
+    pdf.text('Retraits', COL.retraits, y, { align: 'right' });
+    pdf.text('Solde', COL.solde, y, { align: 'right' });
+    pdf.setFont(undefined, 'normal');
+    y += 8;
+
+    // Lignes par année
+    pdf.setFontSize(10);
+    data.forEach((d, i) => {
+      if (y > 185) { pdf.addPage(); y = 20; }
+      if (i % 2 === 0) {
+        pdf.setFillColor(245, 245, 245);
+        pdf.rect(15, y - 5, 267, 8, 'F');
+      }
+      pdf.setTextColor(0, 0, 0); pdf.setFont(undefined, 'bold');
+      pdf.text(String(d.annee), COL.annee, y);
+      pdf.setFont(undefined, 'normal');
+      pdf.setTextColor(0, 100, 0);
+      pdf.text(fmt(d.offrandes), COL.offrandes, y, { align: 'right' });
+      pdf.setTextColor(91, 33, 182);
+      pdf.text(fmt(d.enLigne), COL.enLigne, y, { align: 'right' });
+      pdf.setTextColor(0, 32, 91); pdf.setFont(undefined, 'bold');
+      pdf.text(fmt(d.total), COL.total, y, { align: 'right' });
+      pdf.setFont(undefined, 'normal');
+      pdf.setTextColor(180, 0, 0);
+      pdf.text(d.retraits > 0 ? '-' + fmt(d.retraits) : fmt(0), COL.retraits, y, { align: 'right' });
+      pdf.setTextColor(d.solde < 0 ? 180 : 0, d.solde < 0 ? 0 : 32, d.solde < 0 ? 0 : 91);
+      pdf.setFont(undefined, 'bold');
+      pdf.text(fmt(d.solde), COL.solde, y, { align: 'right' });
+      pdf.setFont(undefined, 'normal');
+      y += 8;
+    });
+
+    // Ligne Grand Total
+    if (y > 180) { pdf.addPage(); y = 20; }
+    pdf.setFillColor(220, 220, 220);
+    pdf.rect(15, y - 5, 267, 10, 'F');
+    pdf.setTextColor(0, 0, 0); pdf.setFont(undefined, 'bold'); pdf.setFontSize(11);
+    pdf.text('GRAND TOTAL', COL.annee, y);
+    pdf.setTextColor(0, 100, 0);
+    pdf.text(fmt(grandTotalOff), COL.offrandes, y, { align: 'right' });
+    pdf.setTextColor(91, 33, 182);
+    pdf.text(fmt(grandTotalEnLigne), COL.enLigne, y, { align: 'right' });
+    pdf.setTextColor(0, 32, 91);
+    pdf.text(fmt(grandTotalGeneral), COL.total, y, { align: 'right' });
+    pdf.setTextColor(180, 0, 0);
+    pdf.text('-' + fmt(grandTotalRet), COL.retraits, y, { align: 'right' });
+    pdf.setTextColor(grandSolde < 0 ? 180 : 0, grandSolde < 0 ? 0 : 32, grandSolde < 0 ? 0 : 91);
+    pdf.text(fmt(grandSolde), COL.solde, y, { align: 'right' });
+    y += 20;
+
+    // Encadré Solde net final
+    pdf.setFillColor(5, 150, 105);
+    pdf.rect(15, y - 5, 267, 22, 'F');
+    pdf.setTextColor(255, 255, 255); pdf.setFontSize(13);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('SOLDE NET — TOUTES PÉRIODES CONFONDUES', 22, y + 5);
+    pdf.setFontSize(16);
+    pdf.text(fmt(grandSolde), 277, y + 8, { align: 'right' });
+    pdf.setFontSize(8); pdf.setFont(undefined, 'normal');
+    pdf.text(`Période : ${yearsList[0]} à ${yearsList[yearsList.length - 1]} — ${yearsList.length} année${yearsList.length > 1 ? 's' : ''} de données`, 22, y + 13);
+
+    // Pied de page
+    pdf.setTextColor(120, 120, 120); pdf.setFontSize(8);
+    pdf.setFont(undefined, 'italic');
+    pdf.text('Ministère Maison de Lumière du Canada — Bilan financier global', 148, 200, { align: 'center' });
+
+    pdf.save(`Bilan_Global_${yearsList[0]}-${yearsList[yearsList.length - 1]}_${new Date().toISOString().slice(0,10)}.pdf`);
+    showToast('PDF téléchargé', 'success');
+  });
+
+  // ========================================
+  // STATISTIQUES
+  // ========================================
+  $('stats-year').addEventListener('change', renderStats);
+
+  function renderStats() {
+    const year = parseInt($('stats-year').value) || new Date().getFullYear();
+
+    // Filtrer les données de l'année
+    const offYear = state.offrandes.filter(o => o.date && new Date(o.date).getFullYear() === year);
+    const retYear = state.retraits.filter(r => r.date && new Date(r.date).getFullYear() === year);
+    const donsYear = (state.dons || []).filter(d =>
+      d.date && new Date(d.date).getFullYear() === year && d.statut !== 'remboursé'
+    );
+
+    // ===== Graphique 1 : Répartition des types d'offrandes (donut) — avec En Ligne =====
+    const totalsByType = offYear.reduce((acc, o) => {
+      acc.assemblee += o.assemblee || 0;
+      acc.ecole += o.ecoleDominicale || 0;
+      acc.dime += o.dime || 0;
+      acc.local += o.local || 0;
+      return acc;
+    }, { assemblee: 0, ecole: 0, dime: 0, local: 0 });
+    const totalEnLigneYear = donsYear.reduce((s, d) => s + (d.montant || 0), 0);
+
+    if (state.charts.statsTypes) state.charts.statsTypes.destroy();
+    const ctxTypes = $('stats-chart-types');
+    if (ctxTypes) {
+      state.charts.statsTypes = new Chart(ctxTypes, {
+        type: 'doughnut',
+        data: {
+          labels: ['Assemblée', 'École Dominicale', 'Dîme', 'Offrande Locale', 'En Ligne'],
+          datasets: [{
+            data: [totalsByType.assemblee, totalsByType.ecole, totalsByType.dime, totalsByType.local, totalEnLigneYear],
+            backgroundColor: ['#00205B', '#F5A800', '#5b21b6', '#059669', '#9333ea'],
+            borderWidth: 2, borderColor: '#fff'
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { padding: 12, font: { size: 12 } } },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.label}: ${fmt(ctx.parsed)}`
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // ===== Graphique 2 : Évolution mensuelle (offrandes + en ligne + retraits) =====
+    const monthlyOff = Array(12).fill(0);
+    const monthlyEnLigne = Array(12).fill(0);
+    const monthlyRet = Array(12).fill(0);
+    offYear.forEach(o => {
+      const m = new Date(o.date).getMonth();
+      monthlyOff[m] += (o.assemblee || 0) + (o.ecoleDominicale || 0) + (o.dime || 0) + (o.local || 0);
+    });
+    donsYear.forEach(d => {
+      const m = new Date(d.date).getMonth();
+      monthlyEnLigne[m] += d.montant || 0;
+    });
+    retYear.forEach(r => {
+      const m = new Date(r.date).getMonth();
+      monthlyRet[m] += r.montant || 0;
+    });
+
+    if (state.charts.statsMonthly) state.charts.statsMonthly.destroy();
+    const ctxMonthly = $('stats-chart-monthly');
+    if (ctxMonthly) {
+      state.charts.statsMonthly = new Chart(ctxMonthly, {
+        type: 'bar',
+        data: {
+          labels: MOIS_LABELS.map(m => m.slice(0,3)),
+          datasets: [
+            { label: 'Offrandes', data: monthlyOff, backgroundColor: '#059669', borderRadius: 4 },
+            { label: 'En Ligne', data: monthlyEnLigne, backgroundColor: '#9333ea', borderRadius: 4 },
+            { label: 'Retraits', data: monthlyRet, backgroundColor: '#dc2626', borderRadius: 4 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}` } }
+          },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    // ===== Graphique 3 : Offrandes par type de culte (+ En Ligne) =====
+    const culteTotals = {};
+    Object.keys(CULTE_LABELS).forEach(k => culteTotals[k] = 0);
+    offYear.forEach(o => {
+      if (!o.typeCulte || !(o.typeCulte in culteTotals)) return;
+      culteTotals[o.typeCulte] += (o.assemblee || 0) + (o.ecoleDominicale || 0) + (o.dime || 0) + (o.local || 0);
+    });
+
+    const culteLabelsAvecEnLigne = [...Object.keys(culteTotals).map(k => CULTE_LABELS[k]), 'En Ligne (dons)'];
+    const culteDataAvecEnLigne = [...Object.values(culteTotals), totalEnLigneYear];
+
+    if (state.charts.statsCultes) state.charts.statsCultes.destroy();
+    const ctxCultes = $('stats-chart-cultes');
+    if (ctxCultes) {
+      state.charts.statsCultes = new Chart(ctxCultes, {
+        type: 'bar',
+        data: {
+          labels: culteLabelsAvecEnLigne,
+          datasets: [{
+            label: 'Total offrandes',
+            data: culteDataAvecEnLigne,
+            backgroundColor: ['#00205B', '#F5A800', '#5b21b6', '#059669', '#dc2626', '#9333ea'],
+            borderRadius: 4
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (ctx) => fmt(ctx.parsed.x) } }
+          },
+          scales: { x: { beginAtZero: true } }
+        }
+      });
+    }
+
+    // ===== Graphique 4 : Comparaison entre années (offrandes + en ligne + retraits) =====
+    const currentYear = new Date().getFullYear();
+    const yearsRange = [];
+    for (let y = currentYear - 4; y <= currentYear; y++) yearsRange.push(y);
+    const yearsOffrandes = yearsRange.map(y => {
+      return state.offrandes
+        .filter(o => o.date && new Date(o.date).getFullYear() === y)
+        .reduce((s, o) => s + (o.assemblee || 0) + (o.ecoleDominicale || 0) + (o.dime || 0) + (o.local || 0), 0);
+    });
+    const yearsEnLigne = yearsRange.map(y => {
+      return (state.dons || [])
+        .filter(d => d.date && new Date(d.date).getFullYear() === y && d.statut !== 'remboursé')
+        .reduce((s, d) => s + (d.montant || 0), 0);
+    });
+    const yearsRetraits = yearsRange.map(y => {
+      return state.retraits
+        .filter(r => r.date && new Date(r.date).getFullYear() === y)
+        .reduce((s, r) => s + (r.montant || 0), 0);
+    });
+
+    if (state.charts.statsYears) state.charts.statsYears.destroy();
+    const ctxYears = $('stats-chart-years');
+    if (ctxYears) {
+      state.charts.statsYears = new Chart(ctxYears, {
+        type: 'bar',
+        data: {
+          labels: yearsRange,
+          datasets: [
+            { label: 'Offrandes', data: yearsOffrandes, backgroundColor: '#00205B', borderRadius: 4 },
+            { label: 'En Ligne', data: yearsEnLigne, backgroundColor: '#9333ea', borderRadius: 4 },
+            { label: 'Retraits', data: yearsRetraits, backgroundColor: '#dc2626', borderRadius: 4 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}` } }
+          },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    // ===== Graphique 5 : Évolution détaillée par type d'offrande (avec En Ligne) =====
+    const detailData = {
+      assemblee: Array(12).fill(0), ecole: Array(12).fill(0),
+      dime: Array(12).fill(0), local: Array(12).fill(0),
+      enLigne: Array(12).fill(0)
+    };
+    offYear.forEach(o => {
+      const m = new Date(o.date).getMonth();
+      detailData.assemblee[m] += o.assemblee || 0;
+      detailData.ecole[m] += o.ecoleDominicale || 0;
+      detailData.dime[m] += o.dime || 0;
+      detailData.local[m] += o.local || 0;
+    });
+    donsYear.forEach(d => {
+      const m = new Date(d.date).getMonth();
+      detailData.enLigne[m] += d.montant || 0;
+    });
+
+    if (state.charts.statsDetail) state.charts.statsDetail.destroy();
+    const ctxDetail = $('stats-chart-detail');
+    if (ctxDetail) {
+      state.charts.statsDetail = new Chart(ctxDetail, {
+        type: 'line',
+        data: {
+          labels: MOIS_LABELS.map(m => m.slice(0,3)),
+          datasets: [
+            { label: 'Assemblée', data: detailData.assemblee, borderColor: '#00205B', backgroundColor: 'rgba(0,32,91,0.1)', tension: 0.3, fill: false },
+            { label: 'École Dominicale', data: detailData.ecole, borderColor: '#F5A800', backgroundColor: 'rgba(245,168,0,0.1)', tension: 0.3, fill: false },
+            { label: 'Dîme', data: detailData.dime, borderColor: '#5b21b6', backgroundColor: 'rgba(91,33,182,0.1)', tension: 0.3, fill: false },
+            { label: 'Offrande Locale', data: detailData.local, borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.1)', tension: 0.3, fill: false },
+            { label: 'En Ligne', data: detailData.enLigne, borderColor: '#9333ea', backgroundColor: 'rgba(147,51,234,0.1)', tension: 0.3, fill: false }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}` } }
+          },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+  }
+
+  // ========================================
+  // DONS EN LIGNE
+  // ========================================
+
+  // Onglets internes
+  document.querySelectorAll('.dons-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.donsTab;
+      document.querySelectorAll('.dons-tab-btn').forEach(b => {
+        b.classList.remove('border-navy', 'text-navy');
+        b.classList.add('border-transparent', 'text-gray-500');
+      });
+      btn.classList.add('border-navy', 'text-navy');
+      btn.classList.remove('border-transparent', 'text-gray-500');
+
+      ['historique', 'manuel', 'config'].forEach(t => {
+        const el = $('dons-tab-' + t);
+        if (el) el.classList.toggle('hidden', t !== tab);
+      });
+    });
+  });
+
+  // Configuration des dons
+  $('dons-config-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+      stripe: $('dons-stripe').value.trim(),
+      paypal: $('dons-paypal').value.trim(),
+      interac: $('dons-interac').value.trim(),
+      message: $('dons-message').value.trim(),
+      updatedAt: serverTimestamp()
+    };
+    try {
+      await setDoc(doc(db, 'config', 'general'), data, { merge: true });
+      showToast('Configuration sauvegardée', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Erreur', 'error');
+    }
+  });
+
+  function loadDonsConfig() {
+    $('dons-stripe').value = state.config.stripe || '';
+    $('dons-paypal').value = state.config.paypal || '';
+    $('dons-interac').value = state.config.interac || '';
+    $('dons-message').value = state.config.message || '';
+    renderDonsPreview();
+
+    // Pré-remplir la date du don manuel
+    if (!$('don-date').value) $('don-date').value = todayISO();
+    renderDonsStats();
+    renderDonsList();
+  }
+
+  function renderDonsPreview() {
+    $('dons-preview-msg').textContent = state.config.message || 'Votre générosité fait la différence.';
+    const stripe = state.config.stripe;
+    const paypal = state.config.paypal;
+    const interac = state.config.interac;
+    $('preview-stripe').style.display = stripe ? 'inline-flex' : 'none';
+    $('preview-stripe').href = stripe || '#';
+    $('preview-paypal').style.display = paypal ? 'inline-flex' : 'none';
+    $('preview-paypal').href = paypal || '#';
+    $('preview-interac').style.display = interac ? 'block' : 'none';
+    $('preview-interac-email').textContent = interac || '—';
+  }
+
+  // ===== Saisie manuelle d'un don =====
+  $('don-manuel-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+      date: $('don-date').value,
+      methode: $('don-methode').value,
+      nom: $('don-nom').value.trim(),
+      email: $('don-email').value.trim(),
+      montant: parseFloat($('don-montant').value) || 0,
+      reference: $('don-reference').value.trim(),
+      statut: 'reçu',
+      source: 'manuel',
+      createdAt: serverTimestamp(),
+      createdBy: state.user.uid
+    };
+    if (!data.nom || !data.montant) {
+      showToast('Nom et montant requis', 'error');
+      return;
+    }
+    try {
+      await addDoc(collection(db, 'dons'), data);
+      $('don-manuel-form').reset();
+      $('don-date').value = todayISO();
+      showToast('Don enregistré', 'success');
+      // Basculer sur l'historique pour montrer le résultat
+      document.querySelector('[data-dons-tab="historique"]').click();
+    } catch (err) {
+      console.error(err);
+      showToast('Erreur', 'error');
+    }
+  });
+
+  // ===== Statistiques des dons =====
+  function renderDonsStats() {
+    const dons = state.dons || [];
+    const totals = { all: 0, stripe: 0, paypal: 0, interac: 0 };
+    const counts = { all: 0, stripe: 0, paypal: 0, interac: 0 };
+
+    dons.forEach(d => {
+      const m = (d.montant || 0);
+      totals.all += m;
+      counts.all++;
+      if (d.methode === 'stripe') { totals.stripe += m; counts.stripe++; }
+      else if (d.methode === 'paypal') { totals.paypal += m; counts.paypal++; }
+      else if (d.methode === 'interac') { totals.interac += m; counts.interac++; }
+    });
+
+    $('don-total').textContent = fmt(totals.all);
+    $('don-count').textContent = counts.all + ' don' + (counts.all > 1 ? 's' : '');
+    $('don-stripe-total').textContent = fmt(totals.stripe);
+    $('don-stripe-count').textContent = counts.stripe + ' don' + (counts.stripe > 1 ? 's' : '');
+    $('don-paypal-total').textContent = fmt(totals.paypal);
+    $('don-paypal-count').textContent = counts.paypal + ' don' + (counts.paypal > 1 ? 's' : '');
+    $('don-interac-total').textContent = fmt(totals.interac);
+    $('don-interac-count').textContent = counts.interac + ' don' + (counts.interac > 1 ? 's' : '');
+  }
+
+  // ===== Liste / Historique des dons =====
+  const METHODE_LABELS = {
+    stripe: 'Stripe', paypal: 'PayPal', interac: 'Interac',
+    especes: 'Espèces', cheque: 'Chèque', virement: 'Virement', autre: 'Autre'
+  };
+  const METHODE_COLORS = {
+    stripe: 'bg-purple-100 text-purple-800',
+    paypal: 'bg-blue-100 text-blue-800',
+    interac: 'bg-green-100 text-green-800',
+    especes: 'bg-amber-100 text-amber-800',
+    cheque: 'bg-gray-100 text-gray-800',
+    virement: 'bg-indigo-100 text-indigo-800',
+    autre: 'bg-gray-100 text-gray-800'
+  };
+
+  function getFilteredDons() {
+    const filterM = $('dons-filter-method').value;
+    const search = ($('dons-search').value || '').toLowerCase();
+    return (state.dons || []).filter(d => {
+      if (filterM && d.methode !== filterM) return false;
+      if (!search) return true;
+      return (d.nom || '').toLowerCase().includes(search)
+          || (d.email || '').toLowerCase().includes(search)
+          || (d.reference || '').toLowerCase().includes(search)
+          || (d.date || '').includes(search);
+    });
+  }
+
+  function renderDonsList() {
+    const tbody = $('dons-list');
+    const filtered = getFilteredDons();
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-400 py-6">Aucun don à afficher</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = filtered.slice(0, 100).map(d => {
+      const methClass = METHODE_COLORS[d.methode] || 'bg-gray-100 text-gray-800';
+      const methLabel = METHODE_LABELS[d.methode] || d.methode || '—';
+      const isAuto = d.source === 'stripe-webhook';
+      return `<tr>
+        <td>${d.date || '—'}</td>
+        <td>
+          ${d.nom || '—'}
+          ${d.reference ? '<br><span class="text-xs text-gray-500">Réf : ' + d.reference + '</span>' : ''}
+        </td>
+        <td class="text-xs">${d.email || '—'}</td>
+        <td>
+          <span class="badge ${methClass}">${methLabel}</span>
+          ${isAuto ? '<br><span class="text-xs text-green-600">⚡ auto</span>' : ''}
+        </td>
+        <td class="text-right font-bold text-navy">${fmt(d.montant)}</td>
+        <td>
+          <span class="badge ${d.statut === 'reçu' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+            ${d.statut || 'reçu'}
+          </span>
+        </td>
+        <td class="text-center"><button class="btn-danger" data-del-don="${d.id}">🗑</button></td>
+      </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('[data-del-don]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Supprimer ce don ?')) return;
+        try {
+          await deleteDoc(doc(db, 'dons', btn.dataset.delDon));
+          showToast('Don supprimé', 'success');
+        } catch (err) { showToast('Erreur', 'error'); }
+      });
+    });
+  }
+
+  $('dons-filter-method').addEventListener('change', renderDonsList);
+  $('dons-search').addEventListener('input', renderDonsList);
+
+  // ===== Export PDF — Historique des Dons =====
+  $('dons-pdf-btn').addEventListener('click', () => {
+    const filtered = getFilteredDons();
+    if (filtered.length === 0) {
+      showToast('Aucune donnée à exporter', 'error');
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('l', 'mm', 'a4');
+
+    pdf.setFontSize(16); pdf.setTextColor(0, 32, 91);
+    pdf.text('MINISTÈRE MAISON DE LUMIÈRE', 148, 15, { align: 'center' });
+    pdf.setFontSize(12);
+    pdf.text('Historique des dons', 148, 23, { align: 'center' });
+    pdf.setDrawColor(245, 168, 0); pdf.setLineWidth(0.6); pdf.line(15, 27, 282, 27);
+
+    const filterM = $('dons-filter-method').value;
+    const search = $('dons-search').value || '';
+
+    pdf.setFontSize(9); pdf.setTextColor(80, 80, 80);
+    pdf.text(`Date du rapport : ${new Date().toLocaleDateString('fr-CA')}`, 15, 33);
+    if (filterM) pdf.text(`Méthode : ${METHODE_LABELS[filterM]}`, 90, 33);
+    if (search) pdf.text(`Recherche : "${search}"`, 150, 33);
+    pdf.text(`Nombre : ${filtered.length}`, 230, 33);
+
+    // Définition des positions de colonnes (en mm)
+    // Page A4 paysage : largeur utile ~282mm (15 à 282)
+    const COL = {
+      date: 18,
+      donateur: 45,    // Donateur (40mm de large)
+      email: 90,       // Email (45mm de large)
+      methode: 140,    // Méthode (25mm de large)
+      reference: 170,  // Référence (75mm de large)
+      montant: 277     // Montant (aligné à droite)
+    };
+
+    let y = 42;
+    pdf.setFillColor(0, 32, 91);
+    pdf.rect(15, y - 5, 267, 9, 'F');
+    pdf.setTextColor(255, 255, 255); pdf.setFontSize(9);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Date', COL.date, y);
+    pdf.text('Donateur', COL.donateur, y);
+    pdf.text('Email', COL.email, y);
+    pdf.text('Méthode', COL.methode, y);
+    pdf.text('Référence', COL.reference, y);
+    pdf.text('Montant', COL.montant, y, { align: 'right' });
+    pdf.setFont(undefined, 'normal');
+    y += 9;
+
+    // Fonction pour tronquer un texte selon sa largeur réelle en pt
+    const truncateForWidth = (txt, maxMm) => {
+      if (!txt) return '';
+      let s = String(txt);
+      // jsPDF travaille en mm. La fonction getTextWidth donne la largeur en unités courantes (mm)
+      while (pdf.getTextWidth(s) > maxMm && s.length > 4) {
+        s = s.slice(0, -1);
+      }
+      if (s !== String(txt)) s = s.slice(0, -1) + '…';
+      return s;
+    };
+
+    let total = 0;
+    pdf.setTextColor(0, 0, 0); pdf.setFontSize(9);
+    filtered.forEach((d, idx) => {
+      if (y > 190) { pdf.addPage(); y = 20; }
+      if (idx % 2 === 0) {
+        pdf.setFillColor(245, 245, 245);
+        pdf.rect(15, y - 5, 267, 8, 'F');
+      }
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(d.date || '', COL.date, y);
+      pdf.text(truncateForWidth(d.nom || '—', 42), COL.donateur, y);
+      pdf.text(truncateForWidth(d.email || '—', 47), COL.email, y);
+      pdf.text(METHODE_LABELS[d.methode] || d.methode || '—', COL.methode, y);
+      pdf.setTextColor(100, 100, 100); pdf.setFontSize(7.5);
+      pdf.text(truncateForWidth(d.reference || '—', 60), COL.reference, y);
+      pdf.setFontSize(9);
+      pdf.setTextColor(0, 32, 91); pdf.setFont(undefined, 'bold');
+      pdf.text(fmt(d.montant), COL.montant, y, { align: 'right' });
+      pdf.setFont(undefined, 'normal');
+      total += d.montant || 0;
+      y += 8;
+    });
+
+    if (y > 190) { pdf.addPage(); y = 20; }
+    pdf.setFillColor(230, 230, 230);
+    pdf.rect(15, y - 5, 267, 10, 'F');
+    pdf.setTextColor(0, 0, 0); pdf.setFont(undefined, 'bold'); pdf.setFontSize(10);
+    pdf.text('TOTAL DES DONS', COL.date, y);
+    pdf.setTextColor(0, 32, 91);
+    pdf.text(fmt(total), COL.montant, y, { align: 'right' });
+
+    pdf.setTextColor(120, 120, 120); pdf.setFontSize(8);
+    pdf.setFont(undefined, 'italic');
+    pdf.text('Ministère Maison de Lumière du Canada — Historique des dons', 148, 205, { align: 'center' });
+
+    const suffix = (filterM ? '_' + filterM : '') + (search ? '_' + search.replace(/[^a-z0-9]/gi, '_') : '');
+    pdf.save(`Historique_Dons${suffix}_${new Date().toISOString().slice(0,10)}.pdf`);
+    showToast('PDF téléchargé', 'success');
+  });
+
+  // ========================================
+  // UTILISATEURS (admin only)
+  // ========================================
+  $('user-add-btn').addEventListener('click', () => {
+    $('user-form').reset();
+    $('user-modal').classList.add('show');
+  });
+  $('user-cancel-btn').addEventListener('click', () => $('user-modal').classList.remove('show'));
+
+  $('user-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (state.profile.role !== 'admin') {
+      showToast('Action réservée aux administrateurs', 'error');
+      return;
+    }
+    const nom = $('new-user-nom').value.trim();
+    const email = $('new-user-email').value.trim();
+    const pwd = $('new-user-pwd').value;
+    const role = $('new-user-role').value;
+    try {
+      // Utilisation d'une instance secondaire pour ne pas déconnecter l'admin
+      const secAuth = await getSecondaryAuth();
+      const cred = await createUserWithEmailAndPassword(secAuth, email, pwd);
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        nom, email, role,
+        createdAt: serverTimestamp(),
+        createdBy: state.user.uid
+      });
+      await signOut(secAuth);
+      showToast('Utilisateur créé', 'success');
+      $('user-modal').classList.remove('show');
+      loadUsers();
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || 'Erreur lors de la création', 'error');
+    }
+  });
+
+  async function loadUsers() {
+    if (state.profile.role !== 'admin') return;
+    try {
+      const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
+      state.users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderUsers();
+    } catch (err) {
+      console.error(err);
+      $('users-list').innerHTML = '<tr><td colspan="5" class="text-center text-red-500 py-6">Erreur de chargement</td></tr>';
+    }
+  }
+
+  function renderUsers() {
+    const tbody = $('users-list');
+    if (state.users.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-400 py-6">Aucun utilisateur</td></tr>';
+      return;
+    }
+    tbody.innerHTML = state.users.map(u => `
+      <tr>
+        <td class="font-bold">${u.nom || '—'}</td>
+        <td>${u.email || '—'}</td>
+        <td><span class="badge badge-${u.role || 'user'}">${u.role || 'user'}</span></td>
+        <td>${fmtDate(u.createdAt)}</td>
+        <td>
+          ${u.id !== state.user.uid ?
+            `<button class="btn-danger" data-del-user="${u.id}">🗑</button>` :
+            '<span class="text-xs text-gray-400">Vous</span>'}
+        </td>
+      </tr>`).join('');
+
+    tbody.querySelectorAll('[data-del-user]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Supprimer ce profil utilisateur ?\n(Note : le compte Auth doit être supprimé manuellement dans la console Firebase)')) return;
+        try {
+          await deleteDoc(doc(db, 'users', btn.dataset.delUser));
+          showToast('Profil supprimé', 'success');
+          loadUsers();
+        } catch (err) { showToast('Erreur', 'error'); }
+      });
+    });
+  }
+
+  // Fermer les modals en cliquant sur le fond
+  document.querySelectorAll('.modal-backdrop').forEach(m => {
+    m.addEventListener('click', (e) => {
+      if (e.target === m) m.classList.remove('show');
+    });
+  });
+}
+</script>
+</body>
+</html>
